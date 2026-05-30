@@ -69,7 +69,8 @@ export const ProjectIdView = ({
           <span>Live preview enabled</span>
         </div>
 
-        <div className="ml-auto flex h-full items-center border-l border-border pl-3 pr-2">
+
+        <div className="ml-auto flex h-full items-center pl-3 ">
           <ExportPopover projectId={projectId} />
         </div>
       </nav>

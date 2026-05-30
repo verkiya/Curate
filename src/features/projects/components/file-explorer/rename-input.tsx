@@ -29,25 +29,48 @@ export const RenameInput = ({
 
   return (
     <div
-      className="flex h-8 w-full items-center gap-1 rounded-md bg-primary/5 pr-2 animate-in fade-in duration-150"
+      className="
+        animate-in
+        fade-in
+        flex
+        h-7
+        w-full
+        items-center
+        gap-1.5
+        rounded-md
+        border
+        border-primary/15
+        bg-primary/8
+        pr-2
+        duration-150
+        focus-within:border-primary/25
+        focus-within:bg-primary/10
+      "
       style={{ paddingLeft: getItemPadding(level, type === "file") }}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {type === "folder" && (
           <ChevronRightIcon
             className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform duration-150",
+              "size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out",
               isOpen && "rotate-90",
             )}
           />
         )}
 
         {type === "file" && (
-          <FileIcon fileName={value} autoAssign className="size-4 shrink-0" />
+          <FileIcon
+            fileName={value}
+            autoAssign
+            className="size-4 shrink-0"
+          />
         )}
 
         {type === "folder" && (
-          <FolderIcon className="size-4 shrink-0" folderName={value} />
+          <FolderIcon
+            className="size-4 shrink-0 text-cyan-400"
+            folderName={value}
+          />
         )}
       </div>
 
@@ -81,7 +104,16 @@ export const RenameInput = ({
             e.currentTarget.select();
           }
         }}
-        className="flex-1 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
+        className="
+          flex-1
+          bg-transparent
+          text-[13px]
+          font-medium
+          text-foreground
+          caret-primary
+          outline-none
+          placeholder:text-muted-foreground/60
+        "
       />
     </div>
   );

@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 
 import { getItemPadding } from "./constants";
-
 export const LoadingRow = ({
   className,
   level = 0,
@@ -12,13 +11,14 @@ export const LoadingRow = ({
   return (
     <div
       className={cn(
-        "flex h-8 items-center gap-2 animate-in fade-in duration-150",
+        "animate-in fade-in flex h-7 items-center gap-2 duration-150",
         className,
       )}
       style={{ paddingLeft: getItemPadding(level, true) }}
     >
-      <div className="size-4 animate-pulse rounded bg-muted" />
-      <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+      <div className="size-4 rounded-sm bg-muted/80 animate-pulse" />
+
+      <div className="h-3 w-24 rounded bg-muted/80 animate-pulse" />
     </div>
   );
 };

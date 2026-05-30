@@ -54,10 +54,10 @@ export const TreeItemWrapper = ({
           }}
           className={cn(
             "group flex h-8 w-full cursor-pointer items-center gap-1 transition-colors duration-150",
-            "hover:bg-accent/30",
+            "hover:bg-accent/40",
             "focus-visible:bg-accent/40 focus-visible:outline-none",
             isActive &&
-              "bg-accent/40 text-foreground shadow-[inset_2px_0_0_hsl(var(--primary))]",
+              "bg-primary/10 text-foreground shadow-[inset_3px_0_0_hsl(var(--primary))]",
           )}
           style={{ paddingLeft: getItemPadding(level, item.type === "file") }}
         >
@@ -67,7 +67,7 @@ export const TreeItemWrapper = ({
 
       <ContextMenuContent
         onCloseAutoFocus={(e) => e.preventDefault()}
-        className="w-56 rounded-xl border-border bg-popover/95 backdrop-blur-xl"
+        className="w-60 rounded-xl border-border bg-popover/95 backdrop-blur-xl"
       >
         {item.type === "folder" && (
           <>
@@ -93,7 +93,7 @@ export const TreeItemWrapper = ({
           className="text-sm text-red-400 focus:text-red-400
           "
         >
-          Delete
+          Delete Permanently
           <ContextMenuShortcut>Del</ContextMenuShortcut>
         </ContextMenuItem>
       </ContextMenuContent>

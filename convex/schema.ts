@@ -41,7 +41,8 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_parent", ["parentId"])
-    .index("by_project_parent", ["projectId", "parentId"]),
+    .index("by_project_parent", ["projectId", "parentId"])
+    .index("by_project_updated", ["projectId", "updatedAt"]),
   conversations: defineTable({
     projectId: v.id("projects"),
     title: v.string(),
