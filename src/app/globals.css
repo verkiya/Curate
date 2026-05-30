@@ -232,3 +232,22 @@ html {
 .curate-toast-close:hover {
   color: var(--foreground);
 }
+.allotment-sash {
+  transition: all 150ms ease;
+}
+
+.allotment-sash::before {
+  transition:
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.allotment-sash:hover::before {
+  background: hsl(var(--primary));
+  opacity: 0.6;
+}
+
+.allotment-sash:active::before {
+  background: hsl(var(--primary));
+  opacity: 1;
+}

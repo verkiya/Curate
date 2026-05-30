@@ -49,7 +49,7 @@ export const useRenameProject = () => {
       const existingProject = localStore.getQuery(api.projects.getById, {
         id: args.id,
       });
-
+      //undefined in convex means still loading
       if (existingProject !== undefined && existingProject !== null) {
         localStore.setQuery(
           api.projects.getById,

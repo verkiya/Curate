@@ -28,7 +28,7 @@ export default defineSchema({
         devCommand: v.optional(v.string()),
       }),
     ),
-  }).index("by_owner", ["ownerId"]),
+  }).index("by_owner_updated", ["ownerId", "updatedAt"]),
 
   files: defineTable({
     projectId: v.id("projects"),

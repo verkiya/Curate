@@ -45,9 +45,7 @@ interface ProjectsListProps {
 const ContinueCard = ({ data }: { data: Doc<"projects"> }) => {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-xs font-medium text-primary/80">
-        Last updated
-      </span>
+      <span className="text-xs font-medium text-primary/80">Last updated</span>
 
       <Button
         variant="outline"
