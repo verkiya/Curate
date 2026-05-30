@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 
 import { ProjectsList } from "./projects-list";
-import { useCreateProject } from "../hooks/use-projects";
 import { ProjectsCommandDialog } from "./projects-command-dialog";
 import Image from "next/image";
 import { ImportGithubDialog } from "./import-github-dialog";
@@ -24,8 +23,6 @@ const font = Poppins({
 });
 
 export const ProjectsView = () => {
-  const createProject = useCreateProject();
-
   const [commandDialogOpen, setCommandDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
@@ -37,10 +34,12 @@ export const ProjectsView = () => {
           e.preventDefault();
           setCommandDialogOpen(true);
         }
+
         if (e.key === "i") {
           e.preventDefault();
           setImportDialogOpen(true);
         }
+
         if (e.key === "j") {
           e.preventDefault();
           setNewProjectDialogOpen(true);
@@ -49,6 +48,7 @@ export const ProjectsView = () => {
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
@@ -69,23 +69,24 @@ export const ProjectsView = () => {
         onOpenChange={setNewProjectDialogOpen}
       />
 
-      <div className="relative min-h-screen bg-sidebar flex flex-col items-center justify-center p-6 md:p-16 overflow-hidden">
-        <div className="fixed right-4 top-4 md:right-6 md:top-6 z-50">
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-sidebar p-6 md:p-16">
+        <div className="fixed right-4 top-4 z-50 md:right-6 md:top-6">
           <UserButton
             appearance={{
               elements: {
                 avatarBox:
-                  "size-14 rounded-md   bg-card shadow-lg hover:scale-120 transition",
+                  "size-14 rounded-md bg-card shadow-lg hover:scale-110 transition-transform",
                 userButtonPopoverCard:
                   "border border-border bg-card shadow-2xl",
               },
             }}
           />
         </div>
-        {/* ANIMATED GRADIENT BLOBS */}
-        <div className="absolute inset-0 pointer-events-none">
+
+        {/* Animated Background */}
+        <div className="pointer-events-none absolute inset-0">
           <motion.div
-            className="absolute w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-3xl"
+            className="absolute h-[600px] w-[600px] rounded-full bg-blue-500/10 blur-3xl"
             animate={{
               x: [-100, 100, -100],
               y: [-50, 50, -50],
@@ -98,7 +99,7 @@ export const ProjectsView = () => {
           />
 
           <motion.div
-            className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl"
+            className="absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-3xl"
             animate={{
               x: [100, -100, 100],
               y: [50, -50, 50],
@@ -110,82 +111,95 @@ export const ProjectsView = () => {
             }}
           />
         </div>
-        {/* UI CONTENT */}
-        <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col gap-4 items-center">
-          <div className="flex justify-between gap-4 w-full items-center">
-            <div className="flex items-center gap-2 w-full group/logo">
-              {/* LOGO ANIMATION */}
-              <motion.div
-                animate={{
-                  scale: [1, 1.04, 1],
-                  filter: [
-                    "brightness(1.10)",
-                    "brightness(1.25)",
-                    "brightness(1.10)",
-                  ],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <Image
-                  src="/curate.svg"
-                  alt="Curate"
-                  width={34}
-                  height={34}
-                  className="md:size-18 brightness-110 contrast-125"
-                />
-              </motion.div>
 
-              <h1
-                className={cn(
-                  "text-6xl md:text-6xl font-semibold ",
-                  font.className,
-                )}
-              >
-                Curate
-              </h1>
-            </div>
+        {/* Main Content */}
+        <div className="relative z-10 mx-auto flex w-full max-w-md flex-col items-center gap-5">
+          <div className="flex w-full items-center justify-center gap-3">
+            <motion.div
+              animate={{
+                scale: [1, 1.02, 1],
+                filter: [
+                  "brightness(1.05)",
+                  "brightness(1.12)",
+                  "brightness(1.05)",
+                ],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Image
+                src="/curate.svg"
+                alt="Curate"
+                width={40}
+                height={40}
+                className="brightness-110 contrast-125 md:size-18"
+              />
+            </motion.div>
+
+            <h1
+              className={cn(
+                "text-6xl font-semibold tracking-tight",
+                font.className,
+              )}
+            >
+              Curate
+            </h1>
           </div>
-          <div className="flex flex-col gap-4 w-full">
-            <div className="grid grid-cols-2 gap-2">
+
+          <div className="space-y-2 text-center">
+            <p className="text-sm font-medium text-primary/90">
+              AI-native development workspace
+            </p>
+          </div>
+
+          <div className="flex w-full flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Button
-                variant="outline"
                 onClick={() => setNewProjectDialogOpen(true)}
-                className="h-full items-start justify-start p-4 bg-background border flex flex-col gap-6 rounded-none"
+                className="
+flex h-full flex-col items-start justify-start gap-6
+rounded-xl p-4
+bg-gradient-to-br from-primary/90 via-primary/80 to-cyan-500/80
+text-primary-foreground
+transition-all duration-200
+hover:-translate-y-1
+hover:shadow-lg hover:shadow-primary/20
+hover:from-primary hover:via-primary/90 hover:to-cyan-400
+hover:brightness-110
+"
               >
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <SquareTerminalIcon className="size-4" />
-                  <Kbd className="bg-accent border uppercase">CTRL+J</Kbd>
+
+                  <Kbd className="border uppercase">CTRL+J</Kbd>
                 </div>
 
-                <div>
-                  <span className="text-sm">New Project</span>
-                </div>
+                <span className="text-sm">New Project</span>
               </Button>
 
               <Button
                 variant="outline"
                 onClick={() => setImportDialogOpen(true)}
-                className="h-full items-start justify-start p-4 bg-background border flex flex-col gap-6 rounded-none"
+                className="flex h-full flex-col items-start justify-start gap-6 rounded-xl bg-background p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <FaGithub className="size-4" />
-                  <Kbd className="bg-accent border uppercase">CTRL+I</Kbd>
+
+                  <Kbd className="border bg-accent uppercase">CTRL+I</Kbd>
                 </div>
 
-                <div>
-                  <span className="text-sm">GitHub Import</span>
-                </div>
+                <span className="text-sm">GitHub Import</span>
               </Button>
             </div>
 
             <ProjectsList onViewAll={() => setCommandDialogOpen(true)} />
           </div>
+
           <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2">
-            <div className="w-[calc(100vw-3rem)] max-w-sm rounded-2xl bg-sidebar/80 backdrop-blur-md">
+            <div className="w-[calc(100vw-3rem)] max-w-md rounded-2xl bg-sidebar/80 backdrop-blur-md">
               <ProjectLearningsButton />
             </div>
           </div>
