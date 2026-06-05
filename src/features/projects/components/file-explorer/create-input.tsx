@@ -54,18 +54,11 @@ export const CreateInput = ({
         )}
 
         {type === "file" && (
-          <FileIcon
-            fileName={value}
-            autoAssign
-            className="size-4"
-          />
+          <FileIcon fileName={value} autoAssign className="size-4" />
         )}
 
         {type === "folder" && (
-          <FolderIcon
-            className="size-4 text-cyan-400"
-            folderName={value}
-          />
+          <FolderIcon className="size-4 text-cyan-400" folderName={value} />
         )}
       </div>
 

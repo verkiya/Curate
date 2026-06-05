@@ -42,11 +42,7 @@ const Tab = ({
   );
 };
 
-export const ProjectIdView = ({
-  projectId,
-}: {
-  projectId: Id<"projects">;
-}) => {
+export const ProjectIdView = ({ projectId }: { projectId: Id<"projects"> }) => {
   const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
 
   return (
@@ -69,7 +65,6 @@ export const ProjectIdView = ({
           <span>Live preview enabled</span>
         </div>
 
-
         <div className="ml-auto flex h-full items-center pl-3 ">
           <ExportPopover projectId={projectId} />
         </div>
@@ -84,9 +79,7 @@ export const ProjectIdView = ({
               : "pointer-events-none opacity-0",
           )}
         >
-          <Allotment
-            defaultSizes={[DEFAULT_SIDEBAR_WIDTH, DEFAULT_MAIN_SIZE]}
-          >
+          <Allotment defaultSizes={[DEFAULT_SIDEBAR_WIDTH, DEFAULT_MAIN_SIZE]}>
             <Allotment.Pane
               snap={false}
               minSize={MIN_SIDEBAR_WIDTH}
@@ -98,10 +91,7 @@ export const ProjectIdView = ({
               </div>
             </Allotment.Pane>
 
-            <Allotment.Pane
-              snap={false}
-              minSize={MIN_EDITOR_WIDTH}
-            >
+            <Allotment.Pane snap={false} minSize={MIN_EDITOR_WIDTH}>
               <div className="h-full bg-background">
                 <EditorView projectId={projectId} />
               </div>

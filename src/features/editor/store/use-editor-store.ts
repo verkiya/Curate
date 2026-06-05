@@ -28,7 +28,7 @@ interface EditorStore {
 }
 
 export const useEditorStore = create<EditorStore>()((set, get) => ({
-  tabs: new Map(),
+  tabs: new Map(), // Doesn't allow duplicates, that's why we're using Map
 
   getTabState: (projectId) => {
     return get().tabs.get(projectId) ?? defaultTabState;
@@ -82,7 +82,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
     const { openTabs, activeTabId, previewTabId } = state;
     const tabIndex = openTabs.indexOf(fileId);
 
-    if (tabIndex === -1) return;
+    if (tabIndex === -1) return; // We have nothing to close, we do early return
 
     const newTabs = openTabs.filter((id) => id !== fileId);
 

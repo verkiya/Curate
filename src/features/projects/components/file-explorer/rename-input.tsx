@@ -59,11 +59,7 @@ export const RenameInput = ({
         )}
 
         {type === "file" && (
-          <FileIcon
-            fileName={value}
-            autoAssign
-            className="size-4 shrink-0"
-          />
+          <FileIcon fileName={value} autoAssign className="size-4 shrink-0" />
         )}
 
         {type === "folder" && (

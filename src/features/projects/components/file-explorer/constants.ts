@@ -8,13 +8,8 @@ export const LEVEL_PADDING = 16;
 // to align with folder labels when collapsed.
 export const FILE_CHEVRON_OFFSET = 16;
 
-export const getItemPadding = (
-  level: number,
-  isFile: boolean,
-) => {
+export const getItemPadding = (level: number, isFile: boolean) => {
   return (
-    BASE_PADDING +
-    level * LEVEL_PADDING +
-    (isFile ? FILE_CHEVRON_OFFSET : 0)
+    BASE_PADDING + level * LEVEL_PADDING + (isFile ? FILE_CHEVRON_OFFSET : 0)
   );
 };

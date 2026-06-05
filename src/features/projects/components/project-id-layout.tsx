@@ -8,7 +8,6 @@ import { Navbar } from "./navbar";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { ConversationSidebar } from "@/features/conversations/components/conversation-sidebar";
 
-
 const MIN_SIDEBAR_WIDTH = 240;
 const MAX_SIDEBAR_WIDTH = 700;
 const MIN_EDITOR_WIDTH = 600;
@@ -91,10 +90,7 @@ export const ProjectIdLayout = ({
             </div>
           </Allotment.Pane>
 
-          <Allotment.Pane
-            snap={false}
-            minSize={MIN_EDITOR_WIDTH}
-          >
+          <Allotment.Pane snap={false} minSize={MIN_EDITOR_WIDTH}>
             <div className="relative h-full bg-background shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
               {children}
             </div>

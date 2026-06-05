@@ -28,11 +28,7 @@ import { CreateInput } from "./create-input";
 import { LoadingRow } from "./loading-row";
 import { Tree } from "./tree";
 
-export const FileExplorer = ({
-  projectId,
-}: {
-  projectId: Id<"projects">;
-}) => {
+export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [collapseKey, setCollapseKey] = useState(0);
   const [creating, setCreating] = useState<"file" | "folder" | null>(null);
@@ -108,9 +104,7 @@ export const FileExplorer = ({
                   </Button>
                 </TooltipTrigger>
 
-                <TooltipContent side="bottom">
-                  Add file
-                </TooltipContent>
+                <TooltipContent side="bottom">Add file</TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -130,9 +124,7 @@ export const FileExplorer = ({
                   </Button>
                 </TooltipTrigger>
 
-                <TooltipContent side="bottom">
-                  Add folder
-                </TooltipContent>
+                <TooltipContent side="bottom">Add folder</TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -151,9 +143,7 @@ export const FileExplorer = ({
                   </Button>
                 </TooltipTrigger>
 
-                <TooltipContent side="bottom">
-                  Collapse all
-                </TooltipContent>
+                <TooltipContent side="bottom">Collapse all</TooltipContent>
               </Tooltip>
             </div>
           </div>
