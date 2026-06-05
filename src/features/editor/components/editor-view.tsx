@@ -18,7 +18,7 @@ const font = JetBrains_Mono({
   weight: ["200", "300"],
 });
 
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 300; // Autosave time
 
 export const EditorView = ({ projectId }: { projectId: Id<"projects"> }) => {
   const { activeTabId, previewTabId, openFile } = useEditor(projectId);
@@ -27,19 +27,20 @@ export const EditorView = ({ projectId }: { projectId: Id<"projects"> }) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isActiveFileBinary = activeFile && activeFile.storageId;
-  const isActiveFileText = activeFile && !activeFile.storageId;
+  const isActiveFileText = activeFile && !activeFile.storageId; // A file is allowed to be empty
 
   const codeSymbols = ["{ }", "<>", "()", "</>", "[]"];
 
   const [particles] = useState(() =>
-    Array.from({ length: 5 }).map(() => ({
+    Array.from({ length: 3 }).map(() => ({
       left: Math.random() * 100,
-      duration: 6 + Math.random() * 4,
+      duration: 10 + Math.random() * 6,
       delay: Math.random() * 6,
       symbol: codeSymbols[Math.floor(Math.random() * codeSymbols.length)],
     })),
   );
-  //Cleaning up pending debounced updates on unmount or file change
+
+  // Cleaning up pending debounced updates on unmount or file change
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -60,7 +61,12 @@ export const EditorView = ({ projectId }: { projectId: Id<"projects"> }) => {
         {/* EMPTY STATE */}
         {!activeFile && (
           <div className="relative flex size-full items-center justify-center overflow-hidden bg-gradient-to-b from-background to-muted/10">
-            {/* MINI CODE PARTICLES */}
+            {/* Ambient glow */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+            </div>
+
+            {/* Floating code particles */}
             {particles.map((p, i) => (
               <motion.span
                 key={i}
@@ -84,51 +90,53 @@ export const EditorView = ({ projectId }: { projectId: Id<"projects"> }) => {
               </motion.span>
             ))}
 
-            {/* LOGO + TEXT */}
-            <motion.div className="flex flex-col items-center">
+            {/* Main content */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="
+                flex flex-col items-center
+                rounded-3xl
+                border border-border/50
+                bg-card/20
+                px-10 py-8
+                backdrop-blur-sm
+              "
+            >
               <div className="flex items-center">
                 <Image
                   src="/logo-alt.svg"
                   alt="Curate"
                   width={50}
                   height={50}
-                  className="opacity-25"
+                  className="opacity-35"
                 />
 
                 <span
                   className={cn(
                     font.className,
-                    "flex items-center text-3xl font-semibold text-muted-foreground/60 md:text-4xl",
+                    "flex items-center text-3xl font-semibold text-foreground/80 md:text-4xl",
                   )}
                 >
                   urate
-                  <motion.span
-                    className="ml-1"
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{
-                      duration: 1.2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    |
-                  </motion.span>
                 </span>
               </div>
 
               <div className="mt-6 space-y-1 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Open a file from the explorer to start coding
+                  Open a file from the explorer to begin editing
                 </p>
+
                 <p className="text-xs text-muted-foreground/70">
-                  Single click previews • Double click pins
+                  Click to preview • Double-click to pin
                 </p>
               </div>
             </motion.div>
           </div>
         )}
 
-        {/* TEXT EDITOR */}
+        {/* TEXT EDITOR - You can use Ctrl + F for the search feature*/}
         {isActiveFileText && (
           <CodeEditor
             key={activeFile._id}
@@ -152,7 +160,6 @@ export const EditorView = ({ projectId }: { projectId: Id<"projects"> }) => {
             }}
           />
         )}
-
         {/* BINARY FILE MESSAGE */}
         {isActiveFileBinary && (
           <div className="flex size-full items-center justify-center">
