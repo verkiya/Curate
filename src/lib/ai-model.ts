@@ -17,6 +17,7 @@ export const MODELS = {
 
   // Code editing
   quickEdit: anthropic("claude-sonnet-4-6"),
+  quickEditFast: anthropic("claude-haiku-4-5-20251001"),
 
   // Larger code generation tasks
   codeGeneration: anthropic("claude-sonnet-4-6"),

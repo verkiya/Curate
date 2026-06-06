@@ -51,7 +51,7 @@ class SuggestionWidget extends WidgetType {
 }
 let debounceTimer: number | null = null;
 let isWaitingForSuggestion = false;
-const DEBOUNCE_DELAY = 1000; // Firing the request for autosuggestion
+const DEBOUNCE_DELAY = 500; // Firing the request for autosuggestion
 let currentAbortController: AbortController | null = null;
 
 // const generateFakeSuggestion = (textBeforeCursor: string): string | null => {

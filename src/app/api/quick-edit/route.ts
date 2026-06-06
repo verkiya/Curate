@@ -1,9 +1,9 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import { generateText, Output } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { firecrawl } from "@/lib/firecrawl";
 import { auth } from "@clerk/nextjs/server";
+import { MODELS } from "@/lib/ai-model";
 
 const requestSchema = z.object({
   selectedCode: z.string().min(1),
@@ -44,24 +44,52 @@ const QUICK_EDIT_PROMPT = `You are a code editing assistant. Edit the selected c
 </instruction>
 
 <instructions>
-Return ONLY the edited version of the selected code.
-Maintain the same indentation level as the original.
-Do not include explanations.
-Do not include markdown.
-Do not wrap in code fences.
+Return ONLY the final edited code.
+
+Do not modify code outside the selected code.
+
+Preserve:
+- existing indentation
+- existing formatting
+- existing quotation style
+- surrounding syntax
+- line endings where possible
+
+Never explain changes.
+Never summarize changes.
+Never wrap in markdown.
+Never use code fences.
+Never include surrounding code.
+
+Return only the edited selection.
+
 If the instruction is unclear or cannot be applied, return the original code unchanged.
 </instructions>`;
+
+function timeout(ms: number) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), ms),
+  );
+}
 
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const body = requestSchema.parse(await request.json());
-    const { selectedCode, fullCode, instruction } = body;
+
+    const {
+      selectedCode,
+      fullCode,
+      instruction,
+    } = body;
 
     const urls = [...new Set(instruction.match(URL_REGEX) || [])].slice(
       0,
@@ -74,15 +102,26 @@ export async function POST(request: Request) {
       const scrapedResults = await Promise.all(
         urls.map(async (url) => {
           try {
-            const result = await firecrawl.scrape(url, {
-              formats: ["markdown"],
-            });
+            const result = await Promise.race([
+              firecrawl.scrape(url, {
+                formats: ["markdown"],
+              }),
+              timeout(5000),
+            ]);
 
-            if (!result.markdown) {
+            if (
+              !result ||
+              typeof result !== "object" ||
+              !("markdown" in result) ||
+              typeof (result as any).markdown !== "string"
+            ) {
               return null;
             }
 
-            const trimmedMarkdown = result.markdown.slice(0, MAX_DOC_CHARS);
+            const trimmedMarkdown = ((result as any).markdown as string).slice(
+              0,
+              MAX_DOC_CHARS,
+            );
 
             return `<doc url="${url}">
 ${trimmedMarkdown}
@@ -102,30 +141,46 @@ ${validResults.join("\n\n")}
       }
     }
 
-    const trimmedFullCode = (fullCode || "").slice(0, MAX_FULL_CODE_CHARS);
+    const trimmedFullCode =
+      fullCode && fullCode.length > MAX_FULL_CODE_CHARS
+        ? `${fullCode.slice(0, MAX_FULL_CODE_CHARS / 2)}\n\n...TRUNCATED...\n\n${fullCode.slice(-(MAX_FULL_CODE_CHARS / 2))}`
+        : fullCode || "";
 
-    const prompt = QUICK_EDIT_PROMPT.replace("{selectedCode}", selectedCode)
+    const prompt = QUICK_EDIT_PROMPT.replace(
+      "{selectedCode}",
+      selectedCode,
+    )
       .replace("{fullCode}", trimmedFullCode)
       .replace("{instruction}", instruction)
       .replace("{documentation}", documentationContext);
 
+    const model =
+      selectedCode.length > 1500
+        ? MODELS.quickEdit
+        : MODELS.quickEditFast;
+
     const { output } = await generateText({
-      model: anthropic("claude-haiku-4-5-20251001"),
-      output: Output.object({ schema: quickEditSchema }),
+      model,
+      output: Output.object({
+        schema: quickEditSchema,
+      }),
       prompt,
       maxRetries: 0,
       temperature: 0,
-      maxOutputTokens: 1000,
+      maxOutputTokens: 600,
     });
 
     return NextResponse.json({
       editedCode: output.editedCode,
+      changed: output.editedCode !== selectedCode,
     });
   } catch (error) {
     console.error("Edit error:", error);
 
     return NextResponse.json(
-      { error: "Failed to generate edited code. Please try again." },
+      {
+        error: "Failed to generate edited code. Please try again.",
+      },
       { status: 500 },
     );
   }

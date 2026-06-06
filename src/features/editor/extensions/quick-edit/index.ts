@@ -194,7 +194,9 @@ const quickEditTooltipField = StateField.define<readonly Tooltip[]>({
 
 const quickEditKeymap = keymap.of([
   {
-    key: "Mod-k",
+    key: "Mod-.",
+    preventDefault: true,
+    stopPropagation: true,
     run: (view) => {
       const selection = view.state.selection.main;
 
@@ -215,7 +217,7 @@ const captureViewExtension = EditorView.updateListener.of((update) => {
   editorView = update.view;
 });
 
-export const quickEdit = () => [
+export const quickEdit = (fileName: string) => [
   quickEditState,
   quickEditTooltipField,
   quickEditKeymap,

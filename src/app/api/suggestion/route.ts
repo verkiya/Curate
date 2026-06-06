@@ -178,27 +178,23 @@ export async function POST(request: Request) {
       .replaceAll("{lineNumber}", lineNumber.toString());
 
     let aiModel;
+    let isFallback = false;
 
     try {
       // 1. Try to reserve a Gemini model from Convex
-      const modelName = await fetchMutation(api.ai.reserveSuggestionModel);
+      const modelName = await fetchMutation(api.GeminiAi.reserveSuggestionModel);
       console.log(`[suggestions] using Convex reserved model: ${modelName}`);
       aiModel = google(modelName);
     } catch (routeError) {
-      // 2. All Gemini quotas exhausted -> fallback to OpenAI's cheapest fast model
-      console.warn("[suggestions] All Gemini quotas exhausted. Falling back to configured fallback model:", routeError);
-      try {
-        aiModel = MODELS.suggestionFallback;
-      } catch (fallbackError) {
-        // If the fallback is not available or fails setup
-        return NextResponse.json({ suggestion: "" }, { status: 429 });
-      }
+      // 2. All Gemini quotas exhausted in Convex -> start with fallback
+      console.warn("[suggestions] Convex quotas exhausted. Starting with fallback:", routeError);
+      aiModel = MODELS.suggestionFallback;
+      isFallback = true;
     }
 
-    try {
-      // Generate structured output using the chosen model
+    const runGeneration = async (modelToUse: any) => {
       const { output } = await generateText({
-        model: aiModel,
+        model: modelToUse,
         output: Output.object({
           schema: suggestionSchema,
         }),
@@ -207,13 +203,15 @@ export async function POST(request: Request) {
         maxOutputTokens: 128,
         maxRetries: 0,
       });
+      return output?.suggestion ?? "";
+    };
 
-      return NextResponse.json({
-        suggestion: output?.suggestion ?? "",
-      });
+    try {
+      // Attempt generation with chosen model
+      const suggestion = await runGeneration(aiModel);
+      return NextResponse.json({ suggestion });
     } catch (generationError: any) {
-      // If the model explicitly returned no output (which means it chose not to suggest anything)
-      // or if it returned raw code that failed JSON parsing
+      // Safely handle empty parsing / intentional empty outputs
       if (
         generationError?.name === "AI_NoOutputGeneratedError" ||
         generationError?.name === "JSONParseError" ||
@@ -222,13 +220,47 @@ export async function POST(request: Request) {
         return NextResponse.json({ suggestion: "" });
       }
       
-      // If the actual generation fails with 429 (e.g. Anthropic runs out of quota too)
+      // If the API throws 429/RESOURCE_EXHAUSTED and we HAVEN'T tried the fallback yet
       if (
-        generationError?.message?.includes("429") ||
-        generationError?.message?.includes("RESOURCE_EXHAUSTED")
+        !isFallback &&
+        (generationError?.message?.includes("429") ||
+          generationError?.message?.includes("RESOURCE_EXHAUSTED") ||
+          generationError?.message?.includes("exceeded your current quota"))
+      ) {
+        console.warn("[suggestions] Primary model rejected with 429/Quota. Activating fallback.");
+        try {
+          const fallbackSuggestion = await runGeneration(MODELS.suggestionFallback);
+          return NextResponse.json({ suggestion: fallbackSuggestion });
+        } catch (fallbackError: any) {
+          if (
+            fallbackError?.name === "AI_NoOutputGeneratedError" ||
+            fallbackError?.name === "JSONParseError" ||
+            fallbackError?.name === "TypeValidationError"
+          ) {
+            return NextResponse.json({ suggestion: "" });
+          }
+          // If the fallback ALSO throws 429, then return 429 to client
+          if (
+            fallbackError?.message?.includes("429") ||
+            fallbackError?.message?.includes("RESOURCE_EXHAUSTED") ||
+            fallbackError?.message?.includes("exceeded your current quota")
+          ) {
+            return NextResponse.json({ suggestion: "" }, { status: 429 });
+          }
+          throw fallbackError;
+        }
+      }
+
+      // If we were already on fallback and it 429'd
+      if (
+        isFallback &&
+        (generationError?.message?.includes("429") ||
+          generationError?.message?.includes("RESOURCE_EXHAUSTED") ||
+          generationError?.message?.includes("exceeded your current quota"))
       ) {
         return NextResponse.json({ suggestion: "" }, { status: 429 });
       }
+
       throw generationError;
     }
   } catch (error) {

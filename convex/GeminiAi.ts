@@ -6,33 +6,11 @@ const MODELS = [
     rpm: 15,
     weight: 10,
   },
-  
-  {
-    name: "gemini-3.1-flash-lite-preview",
-    rpm: 15,
-    weight: 8,
-  },
-  {
-    name: "gemini-3-pro-preview",
-    rpm: 10,
-    weight: 5,
-  },
-  {
-    name: "gemini-3-flash-preview",
-    rpm: 10,
-    weight: 5,
-  },
-  {
-    name: "gemini-2.5-pro",
-    rpm: 5,
-    weight: 2,
-  },
   {
     name: "gemini-2.5-flash-lite",
     rpm: 10,
     weight: 5,
-  },
-  {
+  },{
     name: "gemini-2.5-flash",
     rpm: 5,
     weight: 2,
