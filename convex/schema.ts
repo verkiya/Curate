@@ -28,7 +28,7 @@ export default defineSchema({
         devCommand: v.optional(v.string()),
       }),
     ),
-  }).index("by_owner", ["ownerId"]),
+  }).index("by_owner_updated", ["ownerId", "updatedAt"]),
 
   files: defineTable({
     projectId: v.id("projects"),
@@ -41,7 +41,8 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_parent", ["parentId"])
-    .index("by_project_parent", ["projectId", "parentId"]),
+    .index("by_project_parent", ["projectId", "parentId"])
+    .index("by_project_updated", ["projectId", "updatedAt"]),
   conversations: defineTable({
     projectId: v.id("projects"),
     title: v.string(),
@@ -62,4 +63,9 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_project_status", ["projectId", "status"]),
+  aiUsage: defineTable({
+    modelName: v.string(),
+    requests: v.number(),
+    resetAt: v.number(),
+  }).index("by_modelName", ["modelName"]),
 });

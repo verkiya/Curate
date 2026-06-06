@@ -1,0 +1,29 @@
+◇ injected env (13) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+🔍  Fetching models from Anthropic API…
+
+(node:1480) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/hiver/Desktop/Github/Curate/checkClaudeModelAccess.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\hiver\Desktop\Github\Curate\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Found 10 model(s) accessible with your key:
+
+Model ID                                  Created     Input ($/MTok)Output ($/MTok)
+───────────────────────────────────────────────────────────────────────────────────
+claude-opus-4-8                           2026-05-28  —             —
+claude-opus-4-7                           2026-04-14  $5.00         $25.00
+claude-sonnet-4-6                         2026-02-17  $3.00         $15.00
+claude-opus-4-6                           2026-02-04  $5.00         $25.00
+claude-opus-4-5-20251101                  2025-11-24  $5.00         $25.00
+claude-haiku-4-5-20251001                 2025-10-15  $1.00         $5.00
+claude-sonnet-4-5-20250929                2025-09-29  $3.00         $15.00
+claude-opus-4-1-20250805                  2025-08-05  $15.00        $75.00
+claude-opus-4-20250514                    2025-05-22  $15.00        $75.00
+claude-sonnet-4-20250514                  2025-05-22  $3.00         $15.00
+───────────────────────────────────────────────────────────────────────────────────
+
+Note: Pricing figures are per million tokens (MTok), as of May 2026.
+      '—' means the model ID wasn't found in the embedded price list.
+      Batch API is 50% cheaper; prompt caching cuts cached input by ~90%.
+      Always verify current prices at: https://platform.claude.com/docs/en/about-claude/pricing
+

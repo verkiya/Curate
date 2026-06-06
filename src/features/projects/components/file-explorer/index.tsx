@@ -63,9 +63,9 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
   };
 
   return (
-    <div className="h-full bg-sidebar/80 backdrop-blur-xl">
+    <div className="h-full bg-sidebar/85 backdrop-blur-xl">
       <ScrollArea className="h-full">
-        <div className="sticky top-0 z-10 border-b border-border bg-sidebar/95 backdrop-blur-xl">
+        <div className="sticky top-0 z-10 border-b border-border bg-sidebar/95 shadow-[0_1px_0_hsl(var(--border))] backdrop-blur-xl">
           <div
             role="button"
             onClick={() => setIsOpen((value) => !value)}
@@ -73,13 +73,13 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
           >
             <ChevronRightIcon
               className={cn(
-                "size-4 shrink-0 text-muted-foreground transition-transform duration-150",
+                "size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out",
                 isOpen && "rotate-90",
               )}
             />
 
             {project ? (
-              <p className="line-clamp-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="line-clamp-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/80">
                 {project.name}
               </p>
             ) : (
@@ -98,11 +98,12 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
                     }}
                     variant="highlight"
                     size="icon-xs"
-                    className="size-7 rounded-md hover:bg-accent"
+                    className="size-7 rounded-md text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   >
                     <FilePlusCornerIcon className="size-4" />
                   </Button>
                 </TooltipTrigger>
+
                 <TooltipContent side="bottom">Add file</TooltipContent>
               </Tooltip>
 
@@ -117,11 +118,12 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
                     }}
                     variant="highlight"
                     size="icon-xs"
-                    className="size-7 rounded-md hover:bg-accent"
+                    className="size-7 rounded-md text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   >
                     <FolderPlusIcon className="size-4" />
                   </Button>
                 </TooltipTrigger>
+
                 <TooltipContent side="bottom">Add folder</TooltipContent>
               </Tooltip>
 
@@ -135,11 +137,12 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
                     }}
                     variant="highlight"
                     size="icon-xs"
-                    className="size-7 rounded-md hover:bg-accent"
+                    className="size-7 rounded-md text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   >
                     <CopyMinusIcon className="size-4" />
                   </Button>
                 </TooltipTrigger>
+
                 <TooltipContent side="bottom">Collapse all</TooltipContent>
               </Tooltip>
             </div>
@@ -161,8 +164,14 @@ export const FileExplorer = ({ projectId }: { projectId: Id<"projects"> }) => {
               )}
 
               {rootFiles?.length === 0 && !creating && (
-                <div className="px-3 py-4 text-xs text-muted-foreground">
-                  No files yet
+                <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Empty workspace
+                  </p>
+
+                  <p className="mt-1 text-[11px] text-muted-foreground/70">
+                    Create a file or folder to get started
+                  </p>
                 </div>
               )}
 

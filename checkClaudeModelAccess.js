@@ -11,6 +11,9 @@
  *   Or set the key inline (not recommended for shared environments):
  *   node check-claude-models.js sk-ant-...
  */
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
 
 const API_KEY = process.env.ANTHROPIC_API_KEY || process.argv[2];
 

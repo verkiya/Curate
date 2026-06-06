@@ -1,4 +1,4 @@
-import ky from "ky";
+import ky, { HTTPError } from "ky";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -40,10 +40,19 @@ export const fetcher = async (
 
     return validatedResponse.suggestion || null;
   } catch (error) {
+    // Abort / timeout — expected during rapid typing
     if (
       error instanceof Error &&
       (error.name === "AbortError" || error.name === "TimeoutError")
     ) {
+      return null;
+    }
+
+    // 429 — all models rate-limited (including fallback), notify user
+    if (error instanceof HTTPError && error.response.status === 429) {
+      toast.error("All AI quotas exhausted. Please try again in a minute.", {
+        id: "ai-quota-error",
+      });
       return null;
     }
 

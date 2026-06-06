@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { Poppins } from "next/font/google";
-import { SquareTerminalIcon } from "lucide-react";
+import { BotIcon, CloudIcon, GitBranchIcon, ZapIcon } from "lucide-react";
 import { SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ const CHARS = "01アイウエオカキクケコABCDEF{}[]<>/\\";
 
 const CodeStream = ({ x, delay }: { x: string; delay: number }) => {
   const [chars, setChars] = useState<string[]>([]);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     const generate = () =>
@@ -27,28 +29,36 @@ const CodeStream = ({ x, delay }: { x: string; delay: number }) => {
         () => CHARS[Math.floor(Math.random() * CHARS.length)],
       );
     setChars(generate());
-    const interval = setInterval(() => {
-      setChars((prev) => {
-        const next = [...prev];
-        const idx = Math.floor(Math.random() * next.length);
-        next[idx] = CHARS[Math.floor(Math.random() * CHARS.length)];
-        return next;
-      });
-    }, 120);
+    const interval = setInterval(
+      () => {
+        setChars((prev) => {
+          const next = [...prev];
+          const idx = Math.floor(Math.random() * next.length);
+          next[idx] = CHARS[Math.floor(Math.random() * CHARS.length)];
+          return next;
+        });
+      },
+      shouldReduceMotion ? 800 : 120,
+    );
     return () => clearInterval(interval);
   }, []);
 
   return (
     <motion.div
       className="absolute top-0 flex flex-col gap-3 font-mono text-[10px] text-blue-400/20 select-none pointer-events-none"
+      aria-hidden="true"
       style={{ left: x }}
-      animate={{ y: ["-10%", "110%"] }}
-      transition={{
-        duration: 12,
-        delay,
-        repeat: Infinity,
-        ease: "linear",
-      }}
+      animate={shouldReduceMotion ? undefined : { y: ["-10%", "110%"] }}
+      transition={
+        shouldReduceMotion
+          ? undefined
+          : {
+              duration: 12,
+              delay,
+              repeat: Infinity,
+              ease: "linear",
+            }
+      }
     >
       {chars.map((c, i) => (
         <span key={i} style={{ opacity: 1 - i * 0.07 }}>
@@ -86,48 +96,80 @@ const CornerBracket = ({
   return <div className={styles[position]} />;
 };
 
-const BlinkingCursor = () => {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const interval = setInterval(() => setVisible((v) => !v), 530);
-    return () => clearInterval(interval);
-  }, []);
-  return (
-    <span
-      className="inline-block w-[2px] h-4 bg-blue-400 ml-1 align-middle"
-      style={{ opacity: visible ? 1 : 0 }}
-    />
-  );
-};
+const features = [
+  {
+    icon: BotIcon,
+    label: "AI Coding",
+    desc: "Pair with intelligent agents",
+  },
+  {
+    icon: CloudIcon,
+    label: "Cloud IDE",
+    desc: "Zero-setup execution env",
+  },
+  {
+    icon: GitBranchIcon,
+    label: "GitHub Native",
+    desc: "Commit, branch & PR in-flow",
+  },
+  {
+    icon: ZapIcon,
+    label: "Agent Workspace",
+    desc: "Autonomous task pipelines",
+  },
+];
 
 export const UnauthenticatedView = () => {
   return (
-    <div className="relative flex items-center justify-center h-screen bg-sidebar overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
+    <div className="relative flex items-center justify-center min-h-screen bg-sidebar overflow-hidden py-16">
+      {/* Code streams background */}
+      <div className="absolute inset-0 pointer-events-none hidden sm:block">
         {streams.map((s, i) => (
           <CodeStream key={i} x={s.x} delay={s.delay} />
         ))}
       </div>
 
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Ambient glow blobs */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <motion.div
           className="absolute w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl"
-          animate={{ x: [-80, 80, -80], y: [-40, 40, -40] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            useReducedMotion()
+              ? undefined
+              : { x: [-80, 80, -80], y: [-40, 40, -40] }
+          }
+          transition={
+            useReducedMotion()
+              ? undefined
+              : { duration: 20, repeat: Infinity, ease: "easeInOut" }
+          }
         />
         <motion.div
           className="absolute right-0 bottom-0 w-[400px] h-[400px] bg-blue-400/8 rounded-full blur-3xl"
-          animate={{ x: [80, -80, 80], y: [40, -40, 40] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            useReducedMotion()
+              ? undefined
+              : { x: [80, -80, 80], y: [40, -40, 40] }
+          }
+          transition={
+            useReducedMotion()
+              ? undefined
+              : { duration: 25, repeat: Infinity, ease: "easeInOut" }
+          }
         />
       </div>
 
+      {/* Main card */}
       <motion.div
+        role="main"
         className="relative z-10 flex flex-col items-center gap-8 w-full max-w-sm mx-auto px-6"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={useReducedMotion() ? undefined : { opacity: 0, y: 24 }}
+        animate={useReducedMotion() ? undefined : { opacity: 1, y: 0 }}
+        transition={
+          useReducedMotion() ? undefined : { duration: 0.6, ease: "easeOut" }
+        }
       >
+        {/* Logo */}
         <motion.div
           className="flex items-center gap-3"
           initial={{ opacity: 0, y: -10 }}
@@ -165,6 +207,7 @@ export const UnauthenticatedView = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
         />
 
+        {/* Panel */}
         <motion.div
           className="relative w-full rounded-lg border border-blue-500/25 bg-background/70 backdrop-blur-md p-8 flex flex-col items-center gap-6"
           initial={{ opacity: 0, scale: 0.97 }}
@@ -176,89 +219,86 @@ export const UnauthenticatedView = () => {
           <CornerBracket position="bl" />
           <CornerBracket position="br" />
 
-          <motion.div
-            className="font-mono text-[10px] text-blue-400/50 self-start"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            {">"} auth.status:{" "}
-            <span className="text-blue-400">unauthenticated</span>
-          </motion.div>
-
-          <motion.div
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              delay: 0.5,
-              type: "spring",
-              stiffness: 180,
-              damping: 14,
-            }}
-            className="relative"
-          >
-            <motion.div
-              className="absolute inset-0 rounded-full bg-blue-400/15 blur-lg"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.3, 0.6] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <div className="relative rounded-full bg-blue-500/10 border border-blue-500/25 p-4">
-              <SquareTerminalIcon className="w-7 h-7 text-blue-500" />
-            </div>
-          </motion.div>
-
+          {/* Hero copy */}
           <motion.div
             className="text-center space-y-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.5 }}
           >
             <h2
               className={cn(
-                "text-lg font-semibold text-foreground uppercase flex items-center justify-center",
+                "text-lg font-semibold text-foreground uppercase tracking-wide",
                 font.className,
               )}
             >
-              AI-Powered Cloud IDE
-              <BlinkingCursor />
+              AI-native development workspace
             </h2>
-            <p className="text-sm text-muted-foreground font-mono">
-              One step away from magic
+            <p className="text-sm text-muted-foreground font-mono leading-relaxed">
+              Build, edit and ship software with AI agents,
+              <br />
+              cloud execution and GitHub workflows.
             </p>
           </motion.div>
 
+          {/* Feature grid */}
           <motion.div
-            className="font-mono text-[10px] text-blue-400/40 self-end"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            className="grid grid-cols-2 gap-2 w-full"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.45 }}
           >
-            session_id: <span className="text-green-400/60">0x4A2F</span>
+            {features.map((f, i) => (
+              <motion.div
+                key={f.label}
+                className="flex flex-col gap-1.5 rounded-md border border-blue-500/15 bg-blue-500/5 px-3 py-3 hover:border-blue-500/30 hover:bg-blue-500/10 transition-all duration-200"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65 + i * 0.07, duration: 0.35 }}
+              >
+                <f.icon className="w-3.5 h-3.5 text-blue-400/70" />
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold text-foreground/90 uppercase tracking-wider",
+                    font.className,
+                  )}
+                >
+                  {f.label}
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground/70 leading-tight">
+                  {f.desc}
+                </span>
+              </motion.div>
+            ))}
           </motion.div>
 
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="w-full"
+            transition={{ delay: 0.85 }}
+            className="w-full flex flex-col gap-2"
           >
-            <SignInButton>
+            <SignInButton mode="modal">
               <Button
                 variant="outline"
                 size="default"
-                className="w-full  border-blue-500/25 hover:text-green-400/60 uppercase font-mono tracking-widest hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
+                className="w-full border-blue-500/25 hover:text-green-400/60 uppercase font-mono tracking-widest hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
+                aria-label="Sign in to Curate"
               >
-                {">"} Sign In
+                {">"} Continue
               </Button>
             </SignInButton>
           </motion.div>
         </motion.div>
-        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2">
-          <div className="w-[calc(100vw-3rem)] max-w-sm rounded-2xl bg-sidebar/80 backdrop-blur-md">
-            <ProjectLearningsButton />
-          </div>
-        </div>
       </motion.div>
+
+      {/* Floating ProjectLearningsButton (preserved) */}
+      <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 hidden sm:block">
+        <div className="w-[calc(100vw-3rem)] max-w-sm rounded-2xl bg-sidebar/80 backdrop-blur-md">
+          <ProjectLearningsButton />
+        </div>
+      </div>
     </div>
   );
 };

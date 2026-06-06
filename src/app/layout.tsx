@@ -48,7 +48,24 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <Toaster />
+          <Toaster
+            richColors
+            closeButton
+            expand
+            position="bottom-right"
+            visibleToasts={4}
+            duration={4000}
+            toastOptions={{
+              classNames: {
+                toast: "curate-toast",
+                title: "curate-toast-title",
+                description: "curate-toast-description",
+                actionButton: "curate-toast-action",
+                cancelButton: "curate-toast-cancel",
+                closeButton: "curate-toast-close",
+              },
+            }}
+          />
         </Providers>
         <SpeedInsights />
         <Analytics />

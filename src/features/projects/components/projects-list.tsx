@@ -2,16 +2,13 @@ import Link from "next/link";
 import { FaGithub } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import {
-  AlertCircleIcon,
   AlertTriangleIcon,
   ArrowRightIcon,
-  GlobeIcon,
   Loader2Icon,
   SparklesIcon,
 } from "lucide-react";
 
 import { Kbd } from "@/components/ui/kbd";
-import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 
 import { Doc } from "../../../../convex/_generated/dataModel";
@@ -38,7 +35,7 @@ const getProjectIcon = (project: Doc<"projects">) => {
     return <Loader2Icon className="size-3.5 animate-spin text-primary" />;
   }
 
-  return <SparklesIcon className="size-3.5 text-primary/80" />;
+  return <SparklesIcon className="size-3.5 text-cyan-400" />;
 };
 
 interface ProjectsListProps {
@@ -48,23 +45,35 @@ interface ProjectsListProps {
 const ContinueCard = ({ data }: { data: Doc<"projects"> }) => {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-xs text-muted-foreground">Last updated</span>
+      <span className="text-xs font-medium text-primary/80">Last updated</span>
+
       <Button
         variant="outline"
         asChild
-        className="h-auto items-start justify-start p-4 bg-background border rounded-none flex flex-col gap-2"
+        className="
+          h-auto flex-col items-start justify-start gap-2
+          rounded-xl border-primary/20 bg-background p-4
+          transition-all duration-200
+          hover:border-primary/40
+          hover:shadow-md
+        "
       >
         <Link href={`/projects/${data._id}`} className="group">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {getProjectIcon(data)}
-              <span className="font-medium truncate">{data.name}</span>
+          <div className="flex w-full items-center justify-between">
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex items-center gap-2">
+                {getProjectIcon(data)}
+
+                <span className="truncate font-medium">{data.name}</span>
+              </div>
+
+              <span className="text-xs text-muted-foreground">
+                {formatTimestamp(data.updatedAt)}
+              </span>
             </div>
-            <ArrowRightIcon className="size-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+
+            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
           </div>
-          <span className="text-xs text-muted-foreground">
-            {formatTimestamp(data.updatedAt)}
-          </span>
         </Link>
       </Button>
     </div>
@@ -75,13 +84,22 @@ const ProjectItem = ({ data }: { data: Doc<"projects"> }) => {
   return (
     <Link
       href={`/projects/${data._id}`}
-      className="text-sm text-foreground/60 font-medium hover:text-foreground py-1 flex items-center justify-between w-full group"
+      className="
+        group flex w-full items-center justify-between
+        rounded-md px-2 py-2
+        text-sm font-medium text-foreground/60
+        transition-all duration-200
+        hover:bg-accent/40
+        hover:text-foreground
+      "
     >
       <div className="flex items-center gap-2">
         {getProjectIcon(data)}
+
         <span className="truncate">{data.name}</span>
       </div>
-      <span className="text-xs text-muted-foreground group-hover:text-foreground/60 transition-colors">
+
+      <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground/60">
         {formatTimestamp(data.updatedAt)}
       </span>
     </Link>
@@ -90,7 +108,7 @@ const ProjectItem = ({ data }: { data: Doc<"projects"> }) => {
 
 export const ProjectsList = ({ onViewAll }: ProjectsListProps) => {
   const projects = useProjectsPartial(5);
-
+  // In Convex, any query being undefined is still in loading state otherwise it'll be null or empty array, if it doesn't exist
   if (projects === undefined) {
     return <CubeLoader />;
   }
@@ -100,20 +118,24 @@ export const ProjectsList = ({ onViewAll }: ProjectsListProps) => {
   return (
     <div className="flex flex-col gap-4">
       {mostRecent ? <ContinueCard data={mostRecent} /> : null}
+
       {rest.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground">
-              Recent projects
+              Continue working ({rest.length})
             </span>
+
             <button
               onClick={onViewAll}
-              className="flex items-center gap-2 text-muted-foreground text-xs hover:text-foreground transition-colors"
+              className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               <span>View all</span>
-              <Kbd className="bg-accent border uppercase">CTRL+K</Kbd>
+
+              <Kbd className="border bg-accent uppercase">CTRL+K</Kbd>
             </button>
           </div>
+
           <ul className="flex flex-col">
             {rest.map((project) => (
               <ProjectItem key={project._id} data={project} />

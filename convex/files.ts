@@ -263,12 +263,19 @@ export const renameFile = mutation({
         q.eq("projectId", file.projectId).eq("parentId", file.parentId),
       )
       .collect();
+    //Before renaming,
+    // check whether another file or folder in the same directory
+    // already has the requested name.
 
+    // Ignore the item currently being renamed.
+
+    // If a duplicate exists, stop the rename.
     const existing = siblings.find(
       (sibling) =>
-        sibling.name === args.newName &&
-        sibling.type === file.type &&
-        sibling._id !== args.id,
+        sibling.name === args.newName && //Does another item already have that name?
+        sibling.type === file.type && //file vs file & folder vs folder
+        sibling._id !== args.id, //Ignore the file being renamed.
+      //
     );
 
     if (existing) {

@@ -15,7 +15,7 @@ const setSuggestionEffect = StateEffect.define<string | null>();
 // We define one effect type for settings the suggestion text
 // StateField: Holds our suggestion state in the editor.
 // create()- returns the initial value when the editor loads
-//update()- Called on every transaction (keystroke) to potentially update the value
+//update()- Called on every transaction (keystroke or cursor positioning change) to potentially update the value
 const suggestionState = StateField.define<string | null>({
   create() {
     return null;
@@ -51,7 +51,7 @@ class SuggestionWidget extends WidgetType {
 }
 let debounceTimer: number | null = null;
 let isWaitingForSuggestion = false;
-const DEBOUNCE_DELAY = 400;
+const DEBOUNCE_DELAY = 500; // Firing the request for autosuggestion
 let currentAbortController: AbortController | null = null;
 
 // const generateFakeSuggestion = (textBeforeCursor: string): string | null => {

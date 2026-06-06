@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as GeminiAi from "../GeminiAi.js";
 import type * as auth from "../auth.js";
 import type * as conversations from "../conversations.js";
 import type * as files from "../files.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  GeminiAi: typeof GeminiAi;
   auth: typeof auth;
   conversations: typeof conversations;
   files: typeof files;

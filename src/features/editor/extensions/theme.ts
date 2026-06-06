@@ -3,7 +3,6 @@ import { EditorView } from "@codemirror/view";
 export const customTheme = EditorView.theme({
   "&": {
     outline: "none !important",
-    height: "100%",
   },
 
   "&.cm-focused": {

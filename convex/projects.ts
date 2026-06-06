@@ -52,7 +52,7 @@ export const getPartial = query({
 
     return await ctx.db
       .query("projects")
-      .withIndex("by_owner", (q) => q.eq("ownerId", identity.subject))
+      .withIndex("by_owner_updated", (q) => q.eq("ownerId", identity.subject))
       .order("desc")
       .take(args.limit);
   },
@@ -65,12 +65,27 @@ export const get = query({
 
     return await ctx.db
       .query("projects")
-      .withIndex("by_owner", (q) => q.eq("ownerId", identity.subject))
+      .withIndex("by_owner_updated", (q) => q.eq("ownerId", identity.subject))
       .order("desc")
       .collect();
   },
 });
+export const getProjectName = query({
+  args: {
+    id: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await verifyAuth(ctx);
 
+    const project = await ctx.db.get(args.id);
+
+    if (!project || project.ownerId !== identity.subject) {
+      return null;
+    }
+
+    return project.name;
+  },
+});
 export const getById = query({
   args: {
     id: v.id("projects"),
