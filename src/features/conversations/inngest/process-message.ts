@@ -31,7 +31,7 @@ export const processMessage = inngest.createFunction(
     cancelOn: [
       {
         event: "message/cancel",
-        if: "event.data.messageId == async.data.messageId",
+        if: "event.data.messageId == async.data.messageId", // Event refers to the incoming message event and async refers to the original message event that triggered the function
       },
     ],
     onFailure: async ({ event, step }) => {

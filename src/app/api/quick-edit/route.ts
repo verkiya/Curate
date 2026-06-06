@@ -77,19 +77,12 @@ export async function POST(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = requestSchema.parse(await request.json());
 
-    const {
-      selectedCode,
-      fullCode,
-      instruction,
-    } = body;
+    const { selectedCode, fullCode, instruction } = body;
 
     const urls = [...new Set(instruction.match(URL_REGEX) || [])].slice(
       0,
@@ -146,18 +139,13 @@ ${validResults.join("\n\n")}
         ? `${fullCode.slice(0, MAX_FULL_CODE_CHARS / 2)}\n\n...TRUNCATED...\n\n${fullCode.slice(-(MAX_FULL_CODE_CHARS / 2))}`
         : fullCode || "";
 
-    const prompt = QUICK_EDIT_PROMPT.replace(
-      "{selectedCode}",
-      selectedCode,
-    )
+    const prompt = QUICK_EDIT_PROMPT.replace("{selectedCode}", selectedCode)
       .replace("{fullCode}", trimmedFullCode)
       .replace("{instruction}", instruction)
       .replace("{documentation}", documentationContext);
 
     const model =
-      selectedCode.length > 1500
-        ? MODELS.quickEdit
-        : MODELS.quickEditFast;
+      selectedCode.length > 1500 ? MODELS.quickEdit : MODELS.quickEditFast;
 
     const { output } = await generateText({
       model,

@@ -182,12 +182,17 @@ export async function POST(request: Request) {
 
     try {
       // 1. Try to reserve a Gemini model from Convex
-      const modelName = await fetchMutation(api.GeminiAi.reserveSuggestionModel);
+      const modelName = await fetchMutation(
+        api.GeminiAi.reserveSuggestionModel,
+      );
       console.log(`[suggestions] using Convex reserved model: ${modelName}`);
       aiModel = google(modelName);
     } catch (routeError) {
       // 2. All Gemini quotas exhausted in Convex -> start with fallback
-      console.warn("[suggestions] Convex quotas exhausted. Starting with fallback:", routeError);
+      console.warn(
+        "[suggestions] Convex quotas exhausted. Starting with fallback:",
+        routeError,
+      );
       aiModel = MODELS.suggestionFallback;
       isFallback = true;
     }
@@ -219,7 +224,7 @@ export async function POST(request: Request) {
       ) {
         return NextResponse.json({ suggestion: "" });
       }
-      
+
       // If the API throws 429/RESOURCE_EXHAUSTED and we HAVEN'T tried the fallback yet
       if (
         !isFallback &&
@@ -227,9 +232,13 @@ export async function POST(request: Request) {
           generationError?.message?.includes("RESOURCE_EXHAUSTED") ||
           generationError?.message?.includes("exceeded your current quota"))
       ) {
-        console.warn("[suggestions] Primary model rejected with 429/Quota. Activating fallback.");
+        console.warn(
+          "[suggestions] Primary model rejected with 429/Quota. Activating fallback.",
+        );
         try {
-          const fallbackSuggestion = await runGeneration(MODELS.suggestionFallback);
+          const fallbackSuggestion = await runGeneration(
+            MODELS.suggestionFallback,
+          );
           return NextResponse.json({ suggestion: fallbackSuggestion });
         } catch (fallbackError: any) {
           if (

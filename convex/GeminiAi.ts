@@ -10,7 +10,8 @@ const MODELS = [
     name: "gemini-2.5-flash-lite",
     rpm: 10,
     weight: 5,
-  },{
+  },
+  {
     name: "gemini-2.5-flash",
     rpm: 5,
     weight: 2,
