@@ -63,4 +63,9 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_project_status", ["projectId", "status"]),
+  aiUsage: defineTable({
+    modelName: v.string(),
+    requests: v.number(),
+    resetAt: v.number(),
+  }).index("by_modelName", ["modelName"]),
 });

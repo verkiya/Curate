@@ -12,6 +12,9 @@ export const MODELS = {
     anthropic("claude-haiku-4-5-20251001"),
   ],
 
+  // Fallback for when Convex Gemini quotas are exhausted
+  suggestionFallback: openai("gpt-5.4-nano"),
+
   // Code editing
   quickEdit: anthropic("claude-sonnet-4-6"),
 

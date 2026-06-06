@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
 
 const API_KEY = process.env.OPENAI_API_KEY || process.argv[2];
 
@@ -32,6 +35,20 @@ function classifyModel(id) {
   return "Other";
 }
 
+const PRICING = {
+  // Current generation
+  "gpt-5.4-nano": { input: 0.15, output: 0.60 },
+  "gpt-5-mini": { input: 0.15, output: 0.60 },
+  "gpt-4o-mini": { input: 0.15, output: 0.60 },
+  "gpt-4o": { input: 5.00, output: 15.00 },
+  "gpt-4-turbo": { input: 10.00, output: 30.00 },
+  "gpt-3.5-turbo": { input: 0.50, output: 1.50 },
+};
+
+function fmt(n) {
+  return n != null ? `$${n.toFixed(2)}` : "—";
+}
+
 async function main() {
   console.log("\n🔍 Fetching models from OpenAI API...\n");
 
@@ -43,9 +60,10 @@ async function main() {
     id: 45,
     created: 14,
     category: 15,
+    input: 14,
   };
 
-  const header = col("Model ID", W.id) + col("Created", W.created) + "Category";
+  const header = col("Model ID", W.id) + col("Created", W.created) + col("Input ($/M)", W.input) + col("Output ($/M)", W.input) + "Category";
 
   const divider = "─".repeat(header.length);
 
@@ -58,8 +76,10 @@ async function main() {
       ? new Date(model.created * 1000).toISOString().slice(0, 10)
       : "—";
 
+    const pricing = PRICING[model.id];
+
     console.log(
-      col(model.id, W.id) + col(created, W.created) + classifyModel(model.id),
+      col(model.id, W.id) + col(created, W.created) + col(fmt(pricing?.input), W.input) + col(fmt(pricing?.output), W.input) + classifyModel(model.id),
     );
   }
 

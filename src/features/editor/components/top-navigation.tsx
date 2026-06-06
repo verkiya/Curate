@@ -38,19 +38,12 @@ const Tab = ({
       {file === undefined ? (
         <div className="size-4 animate-pulse rounded bg-muted" />
       ) : (
-        <FileIcon
-          fileName={fileName}
-          autoAssign
-          className="size-4 shrink-0"
-        />
+        <FileIcon fileName={fileName} autoAssign className="size-4 shrink-0" />
       )}
 
       <div className="flex items-center gap-1.5">
         <span
-          className={cn(
-            "whitespace-nowrap text-sm",
-            isPreview && "italic",
-          )}
+          className={cn("whitespace-nowrap text-sm", isPreview && "italic")}
         >
           {fileName}
         </span>
@@ -87,11 +80,7 @@ const Tab = ({
   );
 };
 
-export const TopNavigation = ({
-  projectId,
-}: {
-  projectId: Id<"projects">;
-}) => {
+export const TopNavigation = ({ projectId }: { projectId: Id<"projects"> }) => {
   const { openTabs } = useEditor(projectId);
 
   return (
