@@ -36,7 +36,6 @@ export const createCreateFolderTool = ({
       try {
         return await toolStep?.run("create-folder", async () => {
           //Validate parentId if provided
-          let resolvedParentId: Id<"files"> | undefined;
           if (parentId) {
             try {
               const parentFolder = await convex.query(api.system.getFileById, {

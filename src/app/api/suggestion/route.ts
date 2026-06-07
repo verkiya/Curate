@@ -196,12 +196,17 @@ export async function POST(request: Request) {
 
     try {
       // 1. Try to reserve a Gemini model from Convex
-      const modelName = await fetchMutation(api.GeminiAi.reserveSuggestionModel);
+      const modelName = await fetchMutation(
+        api.GeminiAi.reserveSuggestionModel,
+      );
       console.log(`[suggestions] using Convex reserved model: ${modelName}`);
       aiModel = google(modelName);
     } catch (routeError) {
       // 2. All Gemini quotas exhausted in Convex -> start with fallback
-      console.warn("[suggestions] Convex quotas exhausted. Starting with fallback:", routeError);
+      console.warn(
+        "[suggestions] Convex quotas exhausted. Starting with fallback:",
+        routeError,
+      );
       aiModel = anthropic(CLAUDE_MODELS.haiku);
       isFallback = true;
     }
@@ -245,7 +250,9 @@ export async function POST(request: Request) {
           "[suggestions] Primary model rejected with 429/Quota. Activating fallback.",
         );
         try {
-          const fallbackSuggestion = await runGeneration(anthropic(CLAUDE_MODELS.haiku));
+          const fallbackSuggestion = await runGeneration(
+            anthropic(CLAUDE_MODELS.haiku),
+          );
           return NextResponse.json({ suggestion: fallbackSuggestion });
         } catch (fallbackError: any) {
           if (
