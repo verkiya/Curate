@@ -169,9 +169,7 @@ export const ConversationSidebar = ({
             <div
               className={cn(
                 "size-2 shrink-0 rounded-full",
-                isProcessing
-                  ? "animate-pulse bg-green-500/80 "
-                  : "bg-cyan-400",
+                isProcessing ? "animate-pulse bg-green-500/80 " : "bg-cyan-400",
               )}
             />
 
@@ -180,13 +178,13 @@ export const ConversationSidebar = ({
             </div>
           </div>
 
-          <div className="mr-1 flex items-center rounded-lg border bg-background/40 p-0.5">
+          <div className="mr-1 flex items-center rounded-lg space-x-2 bg-background/40 p-0.5">
             <Button
               size="icon-xs"
               variant="highlight"
               onClick={() => setPastConversationsOpen(true)}
             >
-              <HistoryIcon size="3.5" />
+              <HistoryIcon size="4" />
             </Button>
 
             <Button
@@ -194,7 +192,7 @@ export const ConversationSidebar = ({
               variant="highlight"
               onClick={handleCreateConversation}
             >
-              <PlusIcon size="3.5" />
+              <PlusIcon size="4" />
             </Button>
           </div>
         </div>

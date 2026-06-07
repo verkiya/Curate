@@ -38,10 +38,13 @@ const OPENAI_PRICING = {
 };
 
 const CLAUDE_RELEVANT_MODEL = /^claude-(opus|sonnet|haiku)-4-(8|7|6|5)(?:-|$)/;
-const GOOGLE_RELEVANT_MODEL = /^(models\/(gemini-(2\.5|3(?:\.1)?|3\.5)|gemma-4))/;
-const GOOGLE_EXCLUDED_MODEL = /(image|imagen|veo|tts|audio|live|embedding|aqa|research|robotics|computer-use|antigravity|banana|lyria)/i;
+const GOOGLE_RELEVANT_MODEL =
+  /^(models\/(gemini-(2\.5|3(?:\.1)?|3\.5)|gemma-4))/;
+const GOOGLE_EXCLUDED_MODEL =
+  /(image|imagen|veo|tts|audio|live|embedding|aqa|research|robotics|computer-use|antigravity|banana|lyria)/i;
 const OPENAI_RELEVANT_MODEL = /^(gpt-5\.(5|4)|gpt-5\.(3|2)-codex)/;
-const OPENAI_EXCLUDED_MODEL = /(image|audio|tts|transcribe|whisper|embedding|search|realtime|sora|moderation)/i;
+const OPENAI_EXCLUDED_MODEL =
+  /(image|audio|tts|transcribe|whisper|embedding|search|realtime|sora|moderation)/i;
 
 function pricingOrNull(pricingMap, modelId) {
   const pricing = pricingMap[modelId];
@@ -62,11 +65,15 @@ function isRelevantClaudeModel(modelId) {
 }
 
 function isRelevantGoogleModel(modelId) {
-  return GOOGLE_RELEVANT_MODEL.test(modelId) && !GOOGLE_EXCLUDED_MODEL.test(modelId);
+  return (
+    GOOGLE_RELEVANT_MODEL.test(modelId) && !GOOGLE_EXCLUDED_MODEL.test(modelId)
+  );
 }
 
 function isRelevantOpenAiModel(modelId) {
-  return OPENAI_RELEVANT_MODEL.test(modelId) && !OPENAI_EXCLUDED_MODEL.test(modelId);
+  return (
+    OPENAI_RELEVANT_MODEL.test(modelId) && !OPENAI_EXCLUDED_MODEL.test(modelId)
+  );
 }
 
 function cleanDate(value) {

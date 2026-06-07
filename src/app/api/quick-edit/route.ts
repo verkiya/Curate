@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { firecrawl } from "@/lib/firecrawl";
 import { auth } from "@clerk/nextjs/server";
-import { MODELS } from "@/lib/ai-model";
+import { CLAUDE_MODELS } from "@/lib/ai-models";
+import { anthropic } from "@ai-sdk/anthropic";
 
 const requestSchema = z.object({
   selectedCode: z.string().min(1),
@@ -145,7 +146,9 @@ ${validResults.join("\n\n")}
       .replace("{documentation}", documentationContext);
 
     const model =
-      selectedCode.length > 1500 ? MODELS.quickEdit : MODELS.quickEditFast;
+      selectedCode.length > 1500
+        ? anthropic(CLAUDE_MODELS.sonnet)
+        : anthropic(CLAUDE_MODELS.haiku);
 
     const { output } = await generateText({
       model,
