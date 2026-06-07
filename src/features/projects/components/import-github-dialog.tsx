@@ -1,9 +1,12 @@
+"use client";
+
 import ky, { HTTPError } from "ky";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useClerk } from "@clerk/nextjs";
+import { GithubIcon, Loader2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,12 +18,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldDescription,
+} from "@/components/ui/field";
 
 import { Id } from "../../../../convex/_generated/dataModel";
+import { FaGithub } from "react-icons/fa";
 
 const formSchema = z.object({
-  url: z.url("Please enter a valid URL"),
+  url: z
+    .url("Please enter a valid URL")
+    .refine(
+      (url) => url.includes("github.com/"),
+      "Must be a GitHub repository URL",
+    ),
 });
 
 interface ImportGithubDialogProps {
@@ -35,13 +49,23 @@ export const ImportGithubDialog = ({
   const router = useRouter();
   const { openUserProfile } = useClerk();
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      form.reset();
+    }
+
+    onOpenChange(isOpen);
+  };
+
   const form = useForm({
     defaultValues: {
       url: "",
     },
+
     validators: {
       onSubmit: formSchema,
     },
+
     onSubmit: async ({ value }) => {
       try {
         const { projectId } = await ky
@@ -55,13 +79,14 @@ export const ImportGithubDialog = ({
           }>();
 
         toast.success("Importing repository...");
-        onOpenChange(false);
-        form.reset();
+
+        handleOpenChange(false);
 
         router.push(`/projects/${projectId}`);
       } catch (error) {
         if (error instanceof HTTPError) {
           const body = await error.response.json<{ error: string }>();
+
           if (body.error?.includes("Pro plan required")) {
             toast.error("Upgrade to import repositories", {
               action: {
@@ -69,7 +94,8 @@ export const ImportGithubDialog = ({
                 onClick: () => openUserProfile(),
               },
             });
-            onOpenChange(false);
+
+            handleOpenChange(false);
             return;
           }
 
@@ -80,10 +106,12 @@ export const ImportGithubDialog = ({
                 onClick: () => openUserProfile(),
               },
             });
-            onOpenChange(false);
+
+            handleOpenChange(false);
             return;
           }
         }
+
         toast.error(
           "Unable to import repository. Please check the URL and try again",
         );
@@ -92,15 +120,21 @@ export const ImportGithubDialog = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Import from GitHub</DialogTitle>
+          <div className="flex items-center gap-2">
+            <FaGithub className="size-4" />
+
+            <DialogTitle>Import from GitHub</DialogTitle>
+          </div>
+
           <DialogDescription>
             Enter a GitHub repository URL to import. A new project will be
             created with the repository contents.
           </DialogDescription>
         </DialogHeader>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -114,7 +148,10 @@ export const ImportGithubDialog = ({
 
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>Repository URL</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>
+                    Repository URL
+                  </FieldLabel>
+
                   <Input
                     id={field.name}
                     name={field.name}
@@ -123,25 +160,38 @@ export const ImportGithubDialog = ({
                     onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
                     placeholder="https://github.com/owner/repo"
+                    className="font-mono text-xs"
                   />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+
+                  {isInvalid && (
+                    <FieldError errors={field.state.meta.errors} />
+                  )}
                 </Field>
               );
             }}
           </form.Field>
+
           <DialogFooter className="mt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>
+
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
             >
               {([canSubmit, isSubmitting]) => (
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={!canSubmit || isSubmitting}
+                >
+                  {isSubmitting && (
+                    <Loader2Icon className="mr-2 size-3 animate-spin" />
+                  )}
+
                   {isSubmitting ? "Importing..." : "Import"}
                 </Button>
               )}

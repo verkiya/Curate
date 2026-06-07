@@ -17,7 +17,11 @@ export const createReadFilesTool = ({ internalKey }: ReadFilesToolOptions) => {
     description:
       "Read the content of files from the project. Returns file contents.",
     parameters: z.object({
-      fileIds: z.array(z.string()).describe("Array of Convex Database IDs of the files to read (obtainable via listFiles). Do not pass file paths."),
+      fileIds: z
+        .array(z.string())
+        .describe(
+          "Array of Convex Database IDs of the files to read (obtainable via listFiles). Do not pass file paths.",
+        ),
     }),
     handler: async (params, { step: toolStep }) => {
       const parsed = paramsSchema.safeParse(params);

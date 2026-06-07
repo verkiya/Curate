@@ -17,7 +17,11 @@ export const createUpdateFileTool = ({
     name: "updateFile",
     description: "Update the content of an existing file.",
     parameters: z.object({
-      fileId: z.string().describe("The Convex Database ID of the file to update (obtainable via listFiles). Do not pass file paths."),
+      fileId: z
+        .string()
+        .describe(
+          "The Convex Database ID of the file to update (obtainable via listFiles). Do not pass file paths.",
+        ),
       content: z.string().describe("The new content for the file."),
     }),
     handler: async (params, { step: toolStep }) => {
@@ -35,8 +39,11 @@ export const createUpdateFileTool = ({
           fileId: fileId as Id<"files">,
         });
       } catch (error) {
-        if (error instanceof Error && error.message.includes("ArgumentValidationError")) {
-           return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
+        if (
+          error instanceof Error &&
+          error.message.includes("ArgumentValidationError")
+        ) {
+          return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
         }
         return `Error validating file: ${error instanceof Error ? error.message : "Unknown error"}`;
       }

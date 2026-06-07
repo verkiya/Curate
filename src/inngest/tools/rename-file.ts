@@ -17,7 +17,11 @@ export const createRenameFileTool = ({
     name: "renameFile",
     description: "Rename a file or folder",
     parameters: z.object({
-      fileId: z.string().describe("The Convex Database ID of the file or folder to rename (obtainable via listFiles). Do not pass file paths."),
+      fileId: z
+        .string()
+        .describe(
+          "The Convex Database ID of the file or folder to rename (obtainable via listFiles). Do not pass file paths.",
+        ),
       newName: z.string().describe("The new name for the file or folder"),
     }),
     handler: async (params, { step: toolStep }) => {
@@ -35,8 +39,11 @@ export const createRenameFileTool = ({
           fileId: fileId as Id<"files">,
         });
       } catch (error) {
-        if (error instanceof Error && error.message.includes("ArgumentValidationError")) {
-           return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
+        if (
+          error instanceof Error &&
+          error.message.includes("ArgumentValidationError")
+        ) {
+          return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
         }
         return `Error validating file: ${error instanceof Error ? error.message : "Unknown error"}`;
       }

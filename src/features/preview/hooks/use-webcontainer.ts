@@ -59,6 +59,7 @@ const teardownWebContainer = () => {
 interface UseWebContainerProps {
   projectId: Id<"projects">;
   enabled: boolean;
+  isImporting?: boolean;
   settings?: {
     installCommand?: string;
     devCommand?: string;
@@ -67,6 +68,7 @@ interface UseWebContainerProps {
 export const useWebContainer = ({
   projectId,
   enabled,
+  isImporting,
   settings,
 }: UseWebContainerProps) => {
   const [status, setStatus] = useState<
@@ -82,7 +84,7 @@ export const useWebContainer = ({
   //Fetch files from Convex (auto-updates )
   const files = useFiles(projectId);
   useEffect(() => {
-    if (!enabled || !files || files.length === 0 || hasStartedRef.current) {
+    if (!enabled || !files || files.length === 0 || hasStartedRef.current || isImporting) {
       return;
     }
     hasStartedRef.current = true;
@@ -172,6 +174,7 @@ export const useWebContainer = ({
   }, [
     enabled,
     files,
+    isImporting,
     restartKey,
     settings?.devCommand,
     settings?.installCommand,
@@ -180,7 +183,7 @@ export const useWebContainer = ({
   // Sync file changes (hot-reload)
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !files || status !== "running") return;
+    if (!container || !files) return; // Removed `status !== "running"` check
 
     const syncFiles = async () => {
       const filesMap = new Map(files.map((f) => [f._id, f]));
@@ -201,7 +204,7 @@ export const useWebContainer = ({
       }
     };
     syncFiles();
-  }, [files, status]);
+  }, [files]); // Removed `status` from deps
 
   //Reset when disabled
   useEffect(() => {
