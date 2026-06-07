@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "convex/react";
 import { WebContainer } from "@webcontainer/api";
-import { buildFileTree, getFilePath } from "../utils/file.tree";
-import { api } from "../../../../convex/_generated/api";
+import { buildFileTree, getFilePath } from "../utils/file-tree";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { useFiles } from "@/features/projects/hooks/use-files";
-import { file } from "zod";
+
 //Singleton Webcontainer instance
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
+let cleanupPromise: Promise<void> | null = null;
+
 const getWebContainer = async (): Promise<WebContainer> => {
+  // Wait for any in-progress teardown to finish before booting
+  if (cleanupPromise) {
+    await cleanupPromise;
+    cleanupPromise = null;
+  }
+
   if (webcontainerInstance) {
     return webcontainerInstance;
   }
@@ -19,12 +25,36 @@ const getWebContainer = async (): Promise<WebContainer> => {
   webcontainerInstance = await bootPromise;
   return webcontainerInstance;
 };
+
 const teardownWebContainer = () => {
   if (webcontainerInstance) {
-    webcontainerInstance.teardown();
+    // Instance exists — tear it down immediately
+    try {
+      webcontainerInstance.teardown();
+    } catch {
+      // Instance may already be dead — safe to ignore
+    }
     webcontainerInstance = null;
+    bootPromise = null;
+  } else if (bootPromise) {
+    // Boot is still in progress — schedule teardown for when it completes
+    const pendingBoot = bootPromise;
+    bootPromise = null;
+    cleanupPromise = pendingBoot
+      .then((instance) => {
+        try {
+          instance.teardown();
+        } catch {
+          // Boot may have partially failed
+        }
+      })
+      .catch(() => {
+        // Boot itself failed — nothing to tear down
+      })
+      .finally(() => {
+        webcontainerInstance = null;
+      });
   }
-  bootPromise = null;
 };
 interface UseWebContainerProps {
   projectId: Id<"projects">;
@@ -56,6 +86,8 @@ export const useWebContainer = ({
       return;
     }
     hasStartedRef.current = true;
+    let cancelled = false;
+
     const start = async () => {
       try {
         setStatus("booting");
@@ -65,28 +97,48 @@ export const useWebContainer = ({
           setTerminalOutput((prev) => prev + data);
         };
         const container = await getWebContainer();
+        if (cancelled) return;
+
         containerRef.current = container;
         const fileTree = buildFileTree(files);
         await container.mount(fileTree);
+        if (cancelled) return;
+
         container.on("server-ready", (_port, url) => {
+          if (cancelled) return;
+          console.log(`[webcontainer] server ready: ${url}`);
           setPreviewUrl(url);
           setStatus("running");
         });
+
+        container.on("error", (err) => {
+          if (cancelled) return;
+          console.error("[webcontainer] runtime error:", err);
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Container crashed unexpectedly",
+          );
+          setStatus("error");
+        });
         setStatus("installing");
-        // Parse install command (default: nom install)
+        // Parse install command (default: npm install)
         const installCmd = settings?.installCommand || "npm install";
         const [installBin, ...installArgs] = installCmd.split(" ");
         appendOutput(`$ ${installCmd}\n`);
         const installProcess = await container.spawn(installBin, installArgs);
-        installProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              appendOutput(data);
-            },
-          }),
-        );
+        installProcess.output
+          .pipeTo(
+            new WritableStream({
+              write(data) {
+                if (!cancelled) appendOutput(data);
+              },
+            }),
+          )
+          .catch(() => {});
 
         const installExitCode = await installProcess.exit;
+        if (cancelled) return;
         if (installExitCode !== 0) {
           throw new Error(`${installCmd} failed with code ${installExitCode}`);
         }
@@ -97,19 +149,26 @@ export const useWebContainer = ({
         const [devBin, ...devArgs] = devCmd.split(" ");
         appendOutput(`\n$ ${devCmd}\n`);
         const devProcess = await container.spawn(devBin, devArgs);
-        devProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              appendOutput(data);
-            },
-          }),
-        );
+        devProcess.output
+          .pipeTo(
+            new WritableStream({
+              write(data) {
+                if (!cancelled) appendOutput(data);
+              },
+            }),
+          )
+          .catch(() => {});
       } catch (error) {
+        if (cancelled) return;
         setError(error instanceof Error ? error.message : "Unknown error");
         setStatus("error");
       }
     };
     start();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     enabled,
     files,
@@ -122,13 +181,28 @@ export const useWebContainer = ({
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !files || status !== "running") return;
-    const filesMap = new Map(files.map((f) => [f._id, f]));
-    for (const file of files) {
-      if (file.type !== "file" || file.storageId || !file.content) continue;
-      const filePath = getFilePath(file, filesMap);
-      container.fs.writeFile(filePath, file.content);
-    }
+
+    const syncFiles = async () => {
+      const filesMap = new Map(files.map((f) => [f._id, f]));
+      for (const file of files) {
+        if (
+          file.type !== "file" ||
+          file.storageId ||
+          file.content === undefined
+        ) {
+          continue;
+        }
+        const filePath = getFilePath(file, filesMap);
+        try {
+          await container.fs.writeFile(filePath, file.content);
+        } catch {
+          // Container may have been torn down — safe to ignore
+        }
+      }
+    };
+    syncFiles();
   }, [files, status]);
+
   //Reset when disabled
   useEffect(() => {
     if (!enabled) {
@@ -136,19 +210,33 @@ export const useWebContainer = ({
       setStatus("idle");
       setPreviewUrl(null);
       setError(null);
+      setTerminalOutput("");
     }
   }, [enabled]);
 
+  // Cleanup WebContainer when hook unmounts
+  useEffect(() => {
+    return () => {
+      teardownWebContainer();
+    };
+  }, []);
+
   //Restart the entire WebContainer process
   const restart = useCallback(() => {
+    if (error?.includes("Only a single WebContainer instance")) {
+      window.location.reload();
+      return;
+    }
+
     teardownWebContainer();
     containerRef.current = null;
     hasStartedRef.current = false;
     setStatus("idle");
     setPreviewUrl(null);
     setError(null);
+    setTerminalOutput("");
     setRestartKey((k) => k + 1);
-  }, []);
+  }, [error]);
   return {
     status,
     previewUrl,

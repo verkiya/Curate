@@ -9,6 +9,7 @@ import {
   RefreshCwIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
+
 import { useWebContainer } from "@/features/preview/hooks/use-webcontainer";
 import { PreviewSettingsPopover } from "@/features/preview/components/preview-settings-popover";
 import { PreviewTerminal } from "@/features/preview/components/preview-terminal";
@@ -18,6 +19,7 @@ import { Id } from "../../../../convex/_generated/dataModel";
 
 export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
   const project = useProject(projectId);
+
   const [showTerminal, setShowTerminal] = useState(true);
 
   const { status, previewUrl, error, restart, terminalOutput } =
@@ -32,58 +34,77 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
   return (
     <div className="h-full flex flex-col bg-background">
       {/* TOP BAR */}
-      <div className="h-8.75 flex items-center border-b bg-sidebar shrink-0">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-full rounded-none"
-          disabled={isLoading}
-          onClick={restart}
-          title="Restart container"
-        >
-          <RefreshCwIcon
-            className={`size-3 ${isLoading ? "animate-spin" : ""}`}
-          />
-        </Button>
+      <div className="h-11 flex items-center justify-between border-b bg-muted/20 shrink-0 px-2">
+        <div className="flex items-center">
+          <Button
+            size="icon"
+            variant="secondary"
+            className="size-7 rounded-md text-muted-foreground hover:text-foreground"
+            onClick={restart}
+            title="Restart container"
+          >
+            <RefreshCwIcon
+              className={`size-4 ${isLoading ? "animate-spin text-primary" : ""}`}
+            />
+          </Button>
+        </div>
 
-        <div className="flex-1 h-full flex items-center gap-2 px-2 bg-background border-x text-xs font-mono">
-          <div className="flex items-center gap-1 pl-1">
-            <div className="w-2 h-2 rounded-full bg-red-500/70" />
-            <div className="w-2 h-2 rounded-full bg-yellow-500/70" />
-            <div className="w-2 h-2 rounded-full bg-green-500/70" />
-          </div>
+        <div className="flex-1 flex justify-center max-w-xl mx-4">
+          <div className="flex w-full items-center gap-2.5 px-3 py-1.5 bg-background border rounded-md text-xs font-mono shadow-sm transition-colors hover:border-border/80">
+            <div
+              className={`size-2 rounded-full shrink-0 ${
+                status === "running"
+                  ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+                  : status === "installing"
+                    ? "bg-yellow-500 animate-pulse"
+                    : status === "booting"
+                      ? "bg-blue-500 animate-pulse"
+                      : status === "error"
+                        ? "bg-red-500"
+                        : "bg-muted-foreground/30"
+              }`}
+            />
 
-          <div className="flex-1 truncate px-2 py-[2px] bg-muted/40 rounded text-muted-foreground">
-            {isLoading && (
-              <span className="flex items-center gap-1.5">
-                <Loader2Icon className="size-3 animate-spin" />
-                {status === "booting"
-                  ? "Starting container..."
-                  : "Installing dependencies..."}
-              </span>
-            )}
+            <div className="flex-1 truncate text-muted-foreground flex items-center gap-2">
+              {isLoading && (
+                <span className="flex items-center gap-1.5">
+                  <Loader2Icon className="size-3 animate-spin text-primary/80" />
+                  {status === "booting"
+                    ? "Starting container..."
+                    : "Installing dependencies..."}
+                </span>
+              )}
 
-            {previewUrl && previewUrl}
+              {!isLoading && previewUrl && (
+                <span className="text-foreground/90">{previewUrl}</span>
+              )}
 
-            {!isLoading && !previewUrl && !error && "Ready to preview"}
+              {!isLoading && !previewUrl && !error && (
+                <span>Ready to preview</span>
+              )}
+
+              {error && <span className="text-red-400">Container error</span>}
+            </div>
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-full rounded-none"
-          title="Toggle terminal"
-          onClick={() => setShowTerminal((value) => !value)}
-        >
-          <TerminalSquareIcon className="size-3" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant={showTerminal ? "secondary" : "ghost"}
+            className="size-7 rounded-md text-muted-foreground hover:text-foreground"
+            title="Toggle terminal"
+            onClick={() => setShowTerminal((value) => !value)}
+          >
+            <TerminalSquareIcon className="size-4" />
+          </Button>
 
-        <PreviewSettingsPopover
-          projectId={projectId}
-          initialValues={project?.settings}
-          onSave={restart}
-        />
+          <PreviewSettingsPopover
+            projectId={projectId}
+            initialValues={project?.settings}
+            onSave={restart}
+          />
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -96,6 +117,7 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
               <div className="size-full flex items-center justify-center text-muted-foreground">
                 <div className="flex flex-col items-center gap-3 max-w-md mx-auto text-center">
                   <AlertTriangleIcon className="size-7 text-yellow-500" />
+
                   <p className="text-sm font-medium">{error}</p>
 
                   <Button size="sm" variant="outline" onClick={restart}>
@@ -113,19 +135,38 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
               </div>
             )}
 
+            {/* WAITING FOR SERVER */}
+            {!isLoading && !error && !previewUrl && (
+              <div className="size-full flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <div className="text-sm font-medium">
+                    Waiting for development server
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    Start a server to see the preview.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* PREVIEW */}
             {previewUrl && (
               <motion.div
-                className="size-full relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                className="size-full flex flex-col"
+                initial={{
+                  opacity: 0,
+                  scale: 0.995,
+                }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
                 transition={{ duration: 0.35 }}
               >
-                <div className="absolute inset-0 pointer-events-none border border-border/40 rounded-md" />
-
                 <iframe
                   src={previewUrl}
-                  className="size-full border-0 rounded-md"
+                  className="flex-1 border-0"
                   title="Preview"
                 />
               </motion.div>
@@ -138,7 +179,7 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
               <div className="h-full flex flex-col bg-background border-t">
                 <div className="h-7 flex items-center justify-between px-3 text-xs border-b border-border/50 bg-muted/30 shrink-0">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <div className="size-2 bg-green-500 rounded-full animate-pulse" />
                     <TerminalSquareIcon className="size-3" />
                     Terminal
                   </div>
@@ -179,7 +220,9 @@ function BootAnimation() {
       setVisibleLines((prev) => [...prev, bootLogs[i]]);
       i++;
 
-      if (i >= bootLogs.length) clearInterval(interval);
+      if (i >= bootLogs.length) {
+        clearInterval(interval);
+      }
     }, 1500);
 
     return () => clearInterval(interval);
@@ -206,6 +249,7 @@ function BootAnimation() {
 
         <div className="flex items-center">
           <span>$ </span>
+
           <motion.span
             className="ml-1 w-[6px] h-[12px] bg-green-400 inline-block"
             animate={{ opacity: [0, 1, 0] }}

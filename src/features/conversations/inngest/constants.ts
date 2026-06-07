@@ -72,6 +72,8 @@ Preferred CDNs for static projects:
 </workflow>
 
 <rules>
+- CRITICAL: When updating, reading, deleting, or renaming files, you MUST use the exact Convex Database ID (e.g., "jd7b...xyz") as the fileId. NEVER use file paths or filenames as IDs.
+- If you do not know the exact Convex Database ID for a file, you MUST call listFiles first to find it.
 - Use folder IDs from listFiles as parentId. Use empty string for root level.
 - Complete the ENTIRE task. Create ALL necessary files. Never stop halfway.
 - Never ask "should I continue?" — just finish the job.
