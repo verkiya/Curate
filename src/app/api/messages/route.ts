@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     );
   }
   const projectId = conversation.projectId;
-  //Creating a user message
+  //Find all processing messages
   const processingMessages = await convex.query(
     api.system.getProcessingMessages,
     {
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       projectId,
     },
   );
+  // Cancel the processing messages while the user is trying to send a new one
   if (processingMessages.length > 0) {
     await Promise.all(
       processingMessages.map(async (msg) => {
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       }),
     );
   }
+  // Create a user message
   await convex.mutation(api.system.createMessage, {
     internalKey,
     conversationId: conversationId as Id<"conversations">,

@@ -2,8 +2,12 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Clerk must allow these through so providers.tsx can render UnauthenticatedView.
 // "/" is public here only at the edge — providers still gates ProjectsView behind auth.
-const isPublicRoute = createRouteMatcher(["/", "/learnings(.*)", "/test(.*)"]);
-
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/learnings(.*)",
+  "/test(.*)",
+  "/api/inngest(.*)",
+]);
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();

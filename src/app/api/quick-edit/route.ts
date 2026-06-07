@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { firecrawl } from "@/lib/firecrawl";
 import { auth } from "@clerk/nextjs/server";
-import { MODELS } from "@/lib/ai-model";
+import { CLAUDE_MODELS } from "@/lib/ai-models";
+import { anthropic } from "@ai-sdk/anthropic";
 
 const requestSchema = z.object({
   selectedCode: z.string().min(1),
@@ -77,19 +78,12 @@ export async function POST(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = requestSchema.parse(await request.json());
 
-    const {
-      selectedCode,
-      fullCode,
-      instruction,
-    } = body;
+    const { selectedCode, fullCode, instruction } = body;
 
     const urls = [...new Set(instruction.match(URL_REGEX) || [])].slice(
       0,
@@ -146,18 +140,15 @@ ${validResults.join("\n\n")}
         ? `${fullCode.slice(0, MAX_FULL_CODE_CHARS / 2)}\n\n...TRUNCATED...\n\n${fullCode.slice(-(MAX_FULL_CODE_CHARS / 2))}`
         : fullCode || "";
 
-    const prompt = QUICK_EDIT_PROMPT.replace(
-      "{selectedCode}",
-      selectedCode,
-    )
+    const prompt = QUICK_EDIT_PROMPT.replace("{selectedCode}", selectedCode)
       .replace("{fullCode}", trimmedFullCode)
       .replace("{instruction}", instruction)
       .replace("{documentation}", documentationContext);
 
     const model =
       selectedCode.length > 1500
-        ? MODELS.quickEdit
-        : MODELS.quickEditFast;
+        ? anthropic(CLAUDE_MODELS.sonnet)
+        : anthropic(CLAUDE_MODELS.haiku);
 
     const { output } = await generateText({
       model,

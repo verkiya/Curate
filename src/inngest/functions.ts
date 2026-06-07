@@ -1,8 +1,8 @@
 import { generateText } from "ai";
 import { inngest } from "./client";
-import { anthropic } from "@ai-sdk/anthropic";
 import { firecrawl } from "@/lib/firecrawl";
-import { MODELS } from "@/lib/ai-model";
+import { anthropic } from "@ai-sdk/anthropic";
+import { CLAUDE_MODELS } from "@/lib/ai-models";
 
 const URL_REGEX = /https?:\/\/[^\s]+/g;
 
@@ -32,7 +32,7 @@ export const demoGenerate = inngest.createFunction(
 
     await step.run("generate-text", async () => {
       return await generateText({
-        model: MODELS.chatFallbacks[0],
+        model: anthropic(CLAUDE_MODELS.haiku),
         prompt: finalPrompt,
         experimental_telemetry: {
           isEnabled: true,

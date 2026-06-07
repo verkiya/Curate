@@ -1,0 +1,820 @@
+{
+  "generatedAt": "2026-06-06T06:16:12.931Z",
+  "summary": {
+    "providerCount": 3,
+    "totalModelCount": 33
+  },
+  "providers": {
+    "anthropic": {
+      "count": 7,
+      "models": [
+        {
+          "provider": "anthropic",
+          "id": "claude-opus-4-8",
+          "displayName": "Claude Opus 4.8",
+          "createdAt": "2026-05-28T00:00:00.000Z",
+          "pricing": null,
+          "maxInputTokens": 1000000,
+          "maxOutputTokens": 128000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-opus-4-7",
+          "displayName": "Claude Opus 4.7",
+          "createdAt": "2026-04-14T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 5,
+            "outputPerMillionTokens": 25
+          },
+          "maxInputTokens": 1000000,
+          "maxOutputTokens": 128000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-sonnet-4-6",
+          "displayName": "Claude Sonnet 4.6",
+          "createdAt": "2026-02-17T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 3,
+            "outputPerMillionTokens": 15
+          },
+          "maxInputTokens": 1000000,
+          "maxOutputTokens": 128000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-opus-4-6",
+          "displayName": "Claude Opus 4.6",
+          "createdAt": "2026-02-04T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 5,
+            "outputPerMillionTokens": 25
+          },
+          "maxInputTokens": 1000000,
+          "maxOutputTokens": 128000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-opus-4-5-20251101",
+          "displayName": "Claude Opus 4.5",
+          "createdAt": "2025-11-24T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 5,
+            "outputPerMillionTokens": 25
+          },
+          "maxInputTokens": 200000,
+          "maxOutputTokens": 64000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-haiku-4-5-20251001",
+          "displayName": "Claude Haiku 4.5",
+          "createdAt": "2025-10-15T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 1,
+            "outputPerMillionTokens": 5
+          },
+          "maxInputTokens": 200000,
+          "maxOutputTokens": 64000
+        },
+        {
+          "provider": "anthropic",
+          "id": "claude-sonnet-4-5-20250929",
+          "displayName": "Claude Sonnet 4.5",
+          "createdAt": "2025-09-29T00:00:00.000Z",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 3,
+            "outputPerMillionTokens": 15
+          },
+          "maxInputTokens": 1000000,
+          "maxOutputTokens": 64000
+        }
+      ]
+    },
+    "google": {
+      "count": 12,
+      "models": [
+        {
+          "provider": "google",
+          "id": "models/gemini-2.5-flash",
+          "displayName": "Gemini 2.5 Flash",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-2.5-pro",
+          "displayName": "Gemini 2.5 Pro",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemma-4-26b-a4b-it",
+          "displayName": "Gemma 4 26B A4B IT",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 262144,
+            "output": 32768
+          },
+          "supportedActions": ["generateContent", "countTokens"]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemma-4-31b-it",
+          "displayName": "Gemma 4 31B IT",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 262144,
+            "output": 32768
+          },
+          "supportedActions": ["generateContent", "countTokens"]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-2.5-flash-lite",
+          "displayName": "Gemini 2.5 Flash-Lite",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3-pro-preview",
+          "displayName": "Gemini 3 Pro Preview",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3-flash-preview",
+          "displayName": "Gemini 3 Flash Preview",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3.1-pro-preview",
+          "displayName": "Gemini 3.1 Pro Preview",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3.1-pro-preview-customtools",
+          "displayName": "Gemini 3.1 Pro Preview Custom Tools",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3.1-flash-lite-preview",
+          "displayName": "Gemini 3.1 Flash Lite Preview",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3.1-flash-lite",
+          "displayName": "Gemini 3.1 Flash Lite",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "provider": "google",
+          "id": "models/gemini-3.5-flash",
+          "displayName": "Gemini 3.5 Flash",
+          "createdAt": null,
+          "pricing": null,
+          "tokenLimits": {
+            "input": 1048576,
+            "output": 65536
+          },
+          "supportedActions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        }
+      ]
+    },
+    "openai": {
+      "count": 14,
+      "models": [
+        {
+          "provider": "openai",
+          "id": "gpt-5.2-codex",
+          "createdAt": "2025-12-19T17:23:05.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.3-codex",
+          "createdAt": "2026-02-08T08:05:15.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-2026-03-05",
+          "createdAt": "2026-03-04T19:54:22.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-pro",
+          "createdAt": "2026-03-04T21:26:41.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-pro-2026-03-05",
+          "createdAt": "2026-03-04T21:27:37.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4",
+          "createdAt": "2026-03-05T06:24:12.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-nano-2026-03-17",
+          "createdAt": "2026-03-14T01:13:57.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-nano",
+          "createdAt": "2026-03-14T01:14:30.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": {
+            "currency": "USD",
+            "inputPerMillionTokens": 0.15,
+            "outputPerMillionTokens": 0.6
+          }
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-mini-2026-03-17",
+          "createdAt": "2026-03-14T01:17:56.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.4-mini",
+          "createdAt": "2026-03-14T01:18:43.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.5",
+          "createdAt": "2026-04-22T02:27:27.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.5-2026-04-23",
+          "createdAt": "2026-04-22T06:27:21.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.5-pro",
+          "createdAt": "2026-04-22T21:45:49.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        },
+        {
+          "provider": "openai",
+          "id": "gpt-5.5-pro-2026-04-23",
+          "createdAt": "2026-04-22T21:47:50.000Z",
+          "ownedBy": "system",
+          "category": "gpt",
+          "pricing": null
+        }
+      ]
+    }
+  },
+  "allModels": [
+    {
+      "provider": "anthropic",
+      "id": "claude-opus-4-8",
+      "displayName": "Claude Opus 4.8",
+      "createdAt": "2026-05-28T00:00:00.000Z",
+      "pricing": null,
+      "maxInputTokens": 1000000,
+      "maxOutputTokens": 128000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-opus-4-7",
+      "displayName": "Claude Opus 4.7",
+      "createdAt": "2026-04-14T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 5,
+        "outputPerMillionTokens": 25
+      },
+      "maxInputTokens": 1000000,
+      "maxOutputTokens": 128000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-sonnet-4-6",
+      "displayName": "Claude Sonnet 4.6",
+      "createdAt": "2026-02-17T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 3,
+        "outputPerMillionTokens": 15
+      },
+      "maxInputTokens": 1000000,
+      "maxOutputTokens": 128000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-opus-4-6",
+      "displayName": "Claude Opus 4.6",
+      "createdAt": "2026-02-04T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 5,
+        "outputPerMillionTokens": 25
+      },
+      "maxInputTokens": 1000000,
+      "maxOutputTokens": 128000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-opus-4-5-20251101",
+      "displayName": "Claude Opus 4.5",
+      "createdAt": "2025-11-24T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 5,
+        "outputPerMillionTokens": 25
+      },
+      "maxInputTokens": 200000,
+      "maxOutputTokens": 64000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-haiku-4-5-20251001",
+      "displayName": "Claude Haiku 4.5",
+      "createdAt": "2025-10-15T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 1,
+        "outputPerMillionTokens": 5
+      },
+      "maxInputTokens": 200000,
+      "maxOutputTokens": 64000
+    },
+    {
+      "provider": "anthropic",
+      "id": "claude-sonnet-4-5-20250929",
+      "displayName": "Claude Sonnet 4.5",
+      "createdAt": "2025-09-29T00:00:00.000Z",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 3,
+        "outputPerMillionTokens": 15
+      },
+      "maxInputTokens": 1000000,
+      "maxOutputTokens": 64000
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-2.5-flash",
+      "displayName": "Gemini 2.5 Flash",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-2.5-pro",
+      "displayName": "Gemini 2.5 Pro",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemma-4-26b-a4b-it",
+      "displayName": "Gemma 4 26B A4B IT",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 262144,
+        "output": 32768
+      },
+      "supportedActions": ["generateContent", "countTokens"]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemma-4-31b-it",
+      "displayName": "Gemma 4 31B IT",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 262144,
+        "output": 32768
+      },
+      "supportedActions": ["generateContent", "countTokens"]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-2.5-flash-lite",
+      "displayName": "Gemini 2.5 Flash-Lite",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3-pro-preview",
+      "displayName": "Gemini 3 Pro Preview",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3-flash-preview",
+      "displayName": "Gemini 3 Flash Preview",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3.1-pro-preview",
+      "displayName": "Gemini 3.1 Pro Preview",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3.1-pro-preview-customtools",
+      "displayName": "Gemini 3.1 Pro Preview Custom Tools",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3.1-flash-lite-preview",
+      "displayName": "Gemini 3.1 Flash Lite Preview",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3.1-flash-lite",
+      "displayName": "Gemini 3.1 Flash Lite",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "google",
+      "id": "models/gemini-3.5-flash",
+      "displayName": "Gemini 3.5 Flash",
+      "createdAt": null,
+      "pricing": null,
+      "tokenLimits": {
+        "input": 1048576,
+        "output": 65536
+      },
+      "supportedActions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ]
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.2-codex",
+      "createdAt": "2025-12-19T17:23:05.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.3-codex",
+      "createdAt": "2026-02-08T08:05:15.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-2026-03-05",
+      "createdAt": "2026-03-04T19:54:22.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-pro",
+      "createdAt": "2026-03-04T21:26:41.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-pro-2026-03-05",
+      "createdAt": "2026-03-04T21:27:37.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4",
+      "createdAt": "2026-03-05T06:24:12.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-nano-2026-03-17",
+      "createdAt": "2026-03-14T01:13:57.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-nano",
+      "createdAt": "2026-03-14T01:14:30.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": {
+        "currency": "USD",
+        "inputPerMillionTokens": 0.15,
+        "outputPerMillionTokens": 0.6
+      }
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-mini-2026-03-17",
+      "createdAt": "2026-03-14T01:17:56.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.4-mini",
+      "createdAt": "2026-03-14T01:18:43.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.5",
+      "createdAt": "2026-04-22T02:27:27.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.5-2026-04-23",
+      "createdAt": "2026-04-22T06:27:21.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.5-pro",
+      "createdAt": "2026-04-22T21:45:49.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    },
+    {
+      "provider": "openai",
+      "id": "gpt-5.5-pro-2026-04-23",
+      "createdAt": "2026-04-22T21:47:50.000Z",
+      "ownedBy": "system",
+      "category": "gpt",
+      "pricing": null
+    }
+  ]
+}

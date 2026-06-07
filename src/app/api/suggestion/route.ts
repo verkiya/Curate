@@ -100,7 +100,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { auth } from "@clerk/nextjs/server";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
-import { MODELS } from "@/lib/ai-model";
+import { CLAUDE_MODELS } from "@/lib/ai-models";
 
 const suggestionSchema = z.object({
   suggestion: z
@@ -112,38 +112,56 @@ const suggestionSchema = z.object({
 
 const SUGGESTION_PROMPT = `You are an inline code completion engine.
 
+<context>
+<file_name>{fileName}</file_name>
+
+<previous_lines>
+{previousLines}
+</previous_lines>
+
+<current_line number="{lineNumber}">
+{currentLine}
+</current_line>
+
+<before_cursor>
+{textBeforeCursor}
+</before_cursor>
+
+<after_cursor>
+{textAfterCursor}
+</after_cursor>
+
+<next_lines>
+{nextLines}
+</next_lines>
+
+<full_code>
+{code}
+</full_code>
+</context>
+
+<instructions>
+Follow these steps IN ORDER:
+
+1. First, inspect next_lines.
+   If next_lines already contains the exact same code that would logically follow the cursor, you must return an EMPTY STRING immediately. This means the user is just moving their cursor through existing code.
+
+2. Check the text before the cursor.
+   If it ends with a complete statement (like a semicolon, a closing bracket "}", or a closing parenthesis ")") and there is no obvious incomplete statement, you must return an EMPTY STRING immediately.
+
+3. Only if steps 1 and 2 do not apply:
+   Suggest the exact characters that should be typed directly at the cursor position to complete the current thought, using context from full_code.
+   
 Return ONLY the exact code that should be inserted at the cursor.
 
 STRICT RULES:
 - Return code only
 - No markdown
-- No explanations
-- No comments unless required by the code
-- Never repeat code already after the cursor
-- Continue naturally from the cursor position
+- Do not wrap in backticks
+- Do not repeat code that is already in textBeforeCursor
+- Do not repeat code that is already in textAfterCursor or nextLines
 - If no completion is appropriate, return an empty string
-
-Context:
-
-File: {fileName}
-
-Previous lines:
-{previousLines}
-
-Current line ({lineNumber}):
-{currentLine}
-
-Before cursor:
-{textBeforeCursor}
-
-After cursor:
-{textAfterCursor}
-
-Next lines:
-{nextLines}
-
-Full code:
-{code}`;
+</instructions>`;
 
 export async function POST(request: Request) {
   try {
@@ -157,16 +175,12 @@ export async function POST(request: Request) {
       fileName,
       code,
       currentLine,
-      previousLines,
       textBeforeCursor,
       textAfterCursor,
-      nextLines,
       lineNumber,
+      previousLines,
+      nextLines,
     } = await request.json();
-
-    if (!code) {
-      return NextResponse.json({ error: "Code is required" }, { status: 400 });
-    }
 
     const prompt = SUGGESTION_PROMPT.replaceAll("{fileName}", fileName)
       .replaceAll("{code}", code)
@@ -182,13 +196,18 @@ export async function POST(request: Request) {
 
     try {
       // 1. Try to reserve a Gemini model from Convex
-      const modelName = await fetchMutation(api.GeminiAi.reserveSuggestionModel);
+      const modelName = await fetchMutation(
+        api.GeminiAi.reserveSuggestionModel,
+      );
       console.log(`[suggestions] using Convex reserved model: ${modelName}`);
       aiModel = google(modelName);
     } catch (routeError) {
       // 2. All Gemini quotas exhausted in Convex -> start with fallback
-      console.warn("[suggestions] Convex quotas exhausted. Starting with fallback:", routeError);
-      aiModel = MODELS.suggestionFallback;
+      console.warn(
+        "[suggestions] Convex quotas exhausted. Starting with fallback:",
+        routeError,
+      );
+      aiModel = anthropic(CLAUDE_MODELS.haiku);
       isFallback = true;
     }
 
@@ -219,7 +238,7 @@ export async function POST(request: Request) {
       ) {
         return NextResponse.json({ suggestion: "" });
       }
-      
+
       // If the API throws 429/RESOURCE_EXHAUSTED and we HAVEN'T tried the fallback yet
       if (
         !isFallback &&
@@ -227,9 +246,13 @@ export async function POST(request: Request) {
           generationError?.message?.includes("RESOURCE_EXHAUSTED") ||
           generationError?.message?.includes("exceeded your current quota"))
       ) {
-        console.warn("[suggestions] Primary model rejected with 429/Quota. Activating fallback.");
+        console.warn(
+          "[suggestions] Primary model rejected with 429/Quota. Activating fallback.",
+        );
         try {
-          const fallbackSuggestion = await runGeneration(MODELS.suggestionFallback);
+          const fallbackSuggestion = await runGeneration(
+            anthropic(CLAUDE_MODELS.haiku),
+          );
           return NextResponse.json({ suggestion: fallbackSuggestion });
         } catch (fallbackError: any) {
           if (

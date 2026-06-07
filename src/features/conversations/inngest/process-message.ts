@@ -17,6 +17,7 @@ import { createRenameFileTool } from "@/inngest/tools/rename-file";
 import { createDeleteFilesTool } from "@/inngest/tools/delete-files";
 import { createScrapeUrlsTool } from "@/inngest/tools/scrape-urls";
 import { createCreateFolderTool } from "@/inngest/tools/create-folder";
+import { CLAUDE_MODELS } from "@/lib/ai-models";
 
 interface MessageEvent {
   messageId: Id<"messages">;
@@ -31,7 +32,7 @@ export const processMessage = inngest.createFunction(
     cancelOn: [
       {
         event: "message/cancel",
-        if: "event.data.messageId == async.data.messageId",
+        if: "event.data.messageId == async.data.messageId", // Event refers to the incoming message event and async refers to the original message event that triggered the function
       },
     ],
     onFailure: async ({ event, step }) => {
@@ -80,8 +81,9 @@ export const processMessage = inngest.createFunction(
         limit: 5, // Could put it at 10, reducing it to 5 to save context cost
       });
     });
-
+    // Build system prompt with conversation history ( exclude the current processing message )
     let systemPrompt = CODING_AGENT_SYSTEM_PROMPT;
+    // Filter out the current processing messages and empty messages
     const contextMessages = recentMessages.filter(
       (msg) => msg._id !== messageId && msg.content.trim() !== "",
     );
@@ -92,16 +94,15 @@ export const processMessage = inngest.createFunction(
         .join("\n\n");
       systemPrompt += `\n\n## Previous Conversation (for context only - do NOT repeat these responses):\n${historyText}\n\n## Current Request:\nRespond ONLY to the user's new message below. Do not repeat or reference your previous responses`;
     }
+    // ASSISTANT - How can I help you?
+    // USER - Do this and this
 
-    const shouldGenerateTitle =
-      conversation.title === DEFAULT_CONVERSATION_TITLE;
-
-    if (shouldGenerateTitle) {
+    if (conversation.title === DEFAULT_CONVERSATION_TITLE) {
       const titleAgent = createAgent({
         name: "title-generator",
         system: TITLE_GENERATOR_SYSTEM_PROMPT,
         model: anthropic({
-          model: "claude-3-haiku-20240307",
+          model: CLAUDE_MODELS.haiku,
           defaultParameters: { temperature: 0, max_tokens: 50 },
         }),
       });
@@ -137,7 +138,7 @@ export const processMessage = inngest.createFunction(
       description: "An expert AI coding assistant",
       system: systemPrompt,
       model: anthropic({
-        model: "claude-sonnet-4-5-20250929", //Opus, if you need reasoning
+        model: CLAUDE_MODELS.sonnet, //Opus, if you need reasoning
         defaultParameters: { temperature: 0.2, max_tokens: 8000 }, // Can change tokens to 16000, if needed
       }),
       tools: [

@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
 import {
   Conversation,
   ConversationContent,
@@ -26,6 +28,7 @@ import {
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { Button } from "@/components/ui/button";
+
 import {
   useConversation,
   useConversations,
@@ -62,11 +65,11 @@ export const ConversationSidebar = ({
   );
 
   const thinkingMessages = [
-    "Thinking...",
-    "Building the idea...",
-    "Figuring it out...",
-    "Connecting the pieces...",
-    "Almost there...",
+    "Reading project context...",
+    "Inspecting code...",
+    "Planning changes...",
+    "Generating response...",
+    "Finalizing...",
   ];
 
   const [thinkingIndex, setThinkingIndex] = useState(0);
@@ -123,6 +126,7 @@ export const ConversationSidebar = ({
   };
 
   const handleSubmit = async (message: PromptInputMessage) => {
+    // If processing and no new message, this is just a stop function
     if (isProcessing && !message.text) {
       await handleCancel();
       setInput("");
@@ -159,19 +163,28 @@ export const ConversationSidebar = ({
         onSelect={setSelectedConversationId}
       />
 
-      <div className="flex flex-col h-full bg-sidebar">
-        <div className="h-8.75 flex items-center justify-between border-b">
-          <div className="text-sm truncate pl-3">
-            {activeConversation?.title ?? DEFAULT_CONVERSATION_TITLE}
+      <div className="flex h-full flex-col border-r border-border/70 bg-sidebar/80 backdrop-blur-xl">
+        <div className="flex h-9 items-center justify-between border-b bg-sidebar/70 backdrop-blur-xl">
+          <div className="flex min-w-0 items-center gap-2 pl-3">
+            <div
+              className={cn(
+                "size-2 shrink-0 rounded-full",
+                isProcessing ? "animate-pulse bg-green-500/80 " : "bg-cyan-400",
+              )}
+            />
+
+            <div className="truncate text-sm">
+              {activeConversation?.title ?? DEFAULT_CONVERSATION_TITLE}
+            </div>
           </div>
 
-          <div className="flex items-center px-1 gap-1">
+          <div className="mr-1 flex items-center rounded-lg space-x-2 bg-background/40 p-0.5">
             <Button
               size="icon-xs"
               variant="highlight"
               onClick={() => setPastConversationsOpen(true)}
             >
-              <HistoryIcon size="3.5" />
+              <HistoryIcon size="4" />
             </Button>
 
             <Button
@@ -179,13 +192,26 @@ export const ConversationSidebar = ({
               variant="highlight"
               onClick={handleCreateConversation}
             >
-              <PlusIcon size="3.5" />
+              <PlusIcon size="4" />
             </Button>
           </div>
         </div>
 
         <Conversation className="flex-1">
-          <ConversationContent>
+          <ConversationContent className="space-y-5">
+            {conversationMessages?.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                <div className="mb-2 text-sm font-medium">
+                  Ask Curate about your project
+                </div>
+
+                <div className="max-w-xs text-xs text-muted-foreground">
+                  Explain code, generate components, refactor files, fix bugs,
+                  or answer questions about your workspace.
+                </div>
+              </div>
+            )}
+
             {conversationMessages?.map((message, messageIndex) => (
               <Message key={message._id} from={message.role}>
                 <MessageContent>
@@ -203,7 +229,7 @@ export const ConversationSidebar = ({
                       </motion.span>
                     </div>
                   ) : message.status === "cancelled" ? (
-                    <span className="text-muted-foreground italic">
+                    <span className="italic text-muted-foreground">
                       Request cancelled
                     </span>
                   ) : (
@@ -218,6 +244,7 @@ export const ConversationSidebar = ({
                       <MessageAction
                         onClick={() => {
                           navigator.clipboard.writeText(message.content);
+                          toast.success("Copied");
                         }}
                         label="Copy"
                       >

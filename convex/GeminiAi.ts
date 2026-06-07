@@ -1,32 +1,6 @@
 import { mutation } from "./_generated/server";
 
-const MODELS = [
-  {
-    name: "gemini-3.5-flash",
-    rpm: 15,
-    weight: 10,
-  },
-  {
-    name: "gemini-2.5-flash-lite",
-    rpm: 10,
-    weight: 5,
-  },{
-    name: "gemini-2.5-flash",
-    rpm: 5,
-    weight: 2,
-  },
-  {
-    name: "gemini-2.0-flash",
-    rpm: 5,
-    weight: 1,
-  },
-  {
-    name: "gemini-2.0-flash-lite",
-    rpm: 5,
-    weight: 1,
-  },
-] as const;
-
+import { GEMINI_MODELS } from "../src/lib/ai-models";
 const SAFETY_FACTOR = 0.95;
 
 export const reserveSuggestionModel = mutation({
@@ -36,7 +10,7 @@ export const reserveSuggestionModel = mutation({
     const availableModels = [];
 
     // Check and reset all models in the database
-    for (const model of MODELS) {
+    for (const model of GEMINI_MODELS) {
       let record = await ctx.db
         .query("aiUsage")
         .withIndex("by_modelName", (q) => q.eq("modelName", model.name))

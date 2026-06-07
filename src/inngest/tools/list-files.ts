@@ -3,14 +3,14 @@ import { createTool } from "@inngest/agent-kit";
 import { convex } from "@/lib/convex-client";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-interface ReadFilesToolOptions {
+interface ListFilesToolOptions {
   projectId: Id<"projects">;
   internalKey: string;
 }
 export const createListFilesTool = ({
   projectId,
   internalKey,
-}: ReadFilesToolOptions) => {
+}: ListFilesToolOptions) => {
   return createTool({
     name: "listFiles",
     description:

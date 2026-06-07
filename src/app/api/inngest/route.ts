@@ -6,7 +6,6 @@ import { importGithubRepo } from "@/features/projects/inngest/import-github-repo
 import { exportToGithub } from "@/features/projects/inngest/export-to-github";
 import { demoError, demoGenerate } from "@/inngest/functions";
 
-// Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
