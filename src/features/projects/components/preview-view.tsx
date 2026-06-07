@@ -196,7 +196,7 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
 };
 
 /* ------------------------------------------------ */
-/* Boot animation (fake container logs)             */
+/* Boot animation (infinite looping logs)           */
 /* ------------------------------------------------ */
 
 const bootLogs = [
@@ -208,22 +208,30 @@ const bootLogs = [
   "Configuring runtime...",
   "Starting dev server...",
   "Preparing preview...",
+  "Checking cache...",
+  "Watching files...",
+  "Optimizing bundle...",
+  "Hot reload ready...",
+  "Container heartbeat OK...",
 ];
 
 function BootAnimation() {
   const [visibleLines, setVisibleLines] = useState<string[]>([]);
 
   useEffect(() => {
-    let i = 0;
+    let index = 0;
 
     const interval = setInterval(() => {
-      setVisibleLines((prev) => [...prev, bootLogs[i]]);
-      i++;
+      setVisibleLines((prev) => {
+        const next = [...prev, bootLogs[index]];
 
-      if (i >= bootLogs.length) {
-        clearInterval(interval);
-      }
-    }, 1500);
+        // Keep only the last 10 lines visible
+        return next.slice(-10);
+      });
+
+      // Loop forever
+      index = (index + 1) % bootLogs.length;
+    }, 1200);
 
     return () => clearInterval(interval);
   }, []);
@@ -238,10 +246,10 @@ function BootAnimation() {
       <div className="flex flex-col gap-1">
         {visibleLines.map((line, i) => (
           <motion.div
-            key={i}
+            key={`${line}-${i}`}
             initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.25 }}
           >
             $ {line}
           </motion.div>
@@ -253,7 +261,10 @@ function BootAnimation() {
           <motion.span
             className="ml-1 w-[6px] h-[12px] bg-green-400 inline-block"
             animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+            }}
           />
         </div>
       </div>

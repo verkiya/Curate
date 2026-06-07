@@ -62,7 +62,7 @@ export const ProjectIdView = ({ projectId }: { projectId: Id<"projects"> }) => {
 
         <div className="ml-4 hidden items-center gap-2 text-xs text-muted-foreground lg:flex">
           <div className="size-2 rounded-full animate-pulse bg-cyan-400" />
-          <span>Live preview enabled</span>
+          <span>Refresh after making changes</span>
         </div>
 
         <div className="ml-auto flex h-full items-center pl-3 ">

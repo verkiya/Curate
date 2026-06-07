@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   if (!githubToken) {
     return NextResponse.json(
       {
-        error: "Github not connected. Please reconnect your Github account.",
+        error: "GitHub not connected. Please reconnect your GitHub account.",
       },
       {
         status: 400,

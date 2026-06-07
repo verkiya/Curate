@@ -11,6 +11,7 @@ import {
   ExternalLinkIcon,
   LoaderIcon,
   XCircleIcon,
+  CopyIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -84,13 +85,15 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
       } catch (error) {
         if (error instanceof HTTPError) {
           const body = await error.response.json<{ error: string }>();
+
           if (body.error?.includes("Pro plan required")) {
-            toast.error("Upgrade to import repositories", {
+            toast.error("Upgrade to export repositories", {
               action: {
                 label: "Upgrade",
                 onClick: () => openUserProfile(),
               },
             });
+
             setOpen(false);
             return;
           }
@@ -102,10 +105,12 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                 onClick: () => openUserProfile(),
               },
             });
+
             setOpen(false);
             return;
           }
         }
+
         toast.error("Unable to export repository");
       }
     },
@@ -121,56 +126,80 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
     await ky.post("/api/github/export/reset", {
       json: { projectId },
     });
+
     setOpen(false);
   };
 
   const renderContent = () => {
     if (exportStatus === "exporting") {
       return (
-        <div className="flex flex-col items-center gap-3">
-          <LoaderIcon className="size-6 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Exporting to GitHub...
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full"
-            onClick={handleCancelExport}
-          >
-            Cancel
-          </Button>
+        <div className="w-full rounded-lg border bg-muted/30 p-4">
+          <div className="flex flex-col items-center gap-3">
+            <LoaderIcon className="size-6 animate-spin text-muted-foreground" />
+
+            <p className="text-sm text-muted-foreground">
+              Creating repository and pushing files...
+            </p>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              onClick={handleCancelExport}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       );
     }
 
     if (exportStatus === "completed" && exportRepoUrl) {
       return (
-        <div className="flex flex-col items-center gap-3">
-          <CheckCircle2Icon className="size-6 text-emerald-500" />
-          <p className="text-sm font-medium">Repository created</p>
-          <p className="text-xs text-muted-foreground text-center">
-            Your project has been exported to GitHub.
-          </p>
-          <div className="flex flex-col w-full gap-2">
-            <Button size="sm" className="w-full" asChild>
-              <Link
-                href={exportRepoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+        <div className="w-full rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <div className="flex flex-col items-center gap-3">
+            <CheckCircle2Icon className="size-6 text-emerald-500" />
+
+            <p className="text-sm font-medium">Repository created</p>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Your project has been exported to GitHub.
+            </p>
+
+            <div className="flex flex-col w-full gap-2">
+              <Button size="sm" className="w-full" asChild>
+                <Link
+                  href={exportRepoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLinkIcon className="size-4 mr-1" />
+                  View on GitHub
+                </Link>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  navigator.clipboard.writeText(exportRepoUrl);
+                  toast.success("Repository URL copied");
+                }}
               >
-                <ExternalLinkIcon className="size-4 mr-1" />
-                View on GitHub
-              </Link>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              onClick={handleResetExport}
-            >
-              Close
-            </Button>
+                <CopyIcon className="size-4 mr-1" />
+                Copy URL
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={handleResetExport}
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       );
@@ -179,11 +208,14 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
     if (exportStatus === "failed") {
       return (
         <div className="flex flex-col items-center gap-3">
-          <XCircleIcon className="size-6 text-rose-500" />
+          <XCircleIcon className="size-6 text-rose-300" />
+
           <p className="text-sm font-medium">Unable to export</p>
+
           <p className="text-xs text-muted-foreground text-center">
             Something went wrong. Please try again.
           </p>
+
           <Button
             size="sm"
             variant="outline"
@@ -205,11 +237,16 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
       >
         <div className="space-y-4">
           <div className="space-y-1">
-            <h4 className="font-medium text-sm">Export to GitHub</h4>
+            <div className="flex items-center gap-2">
+              <FaGithub className="size-4" />
+              <h4 className="font-medium text-sm">Export to GitHub</h4>
+            </div>
+
             <p className="text-xs text-muted-foreground">
               Export your project to a GitHub repository.
             </p>
           </div>
+
           <form.Field name="repoName">
             {(field) => {
               const isInvalid =
@@ -218,6 +255,7 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>Repository Name</FieldLabel>
+
                   <Input
                     id={field.name}
                     name={field.name}
@@ -226,35 +264,49 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
                     placeholder="my-project"
+                    className="font-mono ring-primary ring-1"
                   />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+
+                  <div className="rounded-md bg-muted/40 px-2 py-1 text-xs font-mono text-muted-foreground mt-2">
+                    github.com/your-username/
+                    {field.state.value || "repository-name"}
+                  </div>
+
+                  {isInvalid && (
+                    <FieldError errors={field.state.meta.errors} />
+                  )}
                 </Field>
               );
             }}
           </form.Field>
 
           <form.Field name="visibility">
-            {(field) => {
-              return (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Visibility</FieldLabel>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={(value: "public" | "private") =>
-                      field.handleChange(value)
-                    }
-                  >
-                    <SelectTrigger id={field.name}>
-                      <SelectValue placeholder="Select visibility" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              );
-            }}
+            {(field) => (
+              <Field>
+                <FieldLabel htmlFor={field.name}>Visibility</FieldLabel>
+
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value: "public" | "private") =>
+                    field.handleChange(value)
+                  }
+                >
+                  <SelectTrigger id={field.name}>
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="private" className="cursor-pointer">
+                      Private • only you can access
+                    </SelectItem>
+
+                    <SelectItem value="public" className="cursor-pointer">
+                      Public • visible to everyone
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           </form.Field>
 
           <form.Field name="description">
@@ -265,9 +317,11 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+
                   <Textarea
                     id={field.name}
                     name={field.name}
+                    className="ring-primary ring-1"
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -275,7 +329,14 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                     placeholder="A short description of your project"
                     rows={2}
                   />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+
+                  <div className=" text-right text-xs text-muted-foreground mt-1">
+                    {field.state.value.length}/350
+                  </div>
+
+                  {isInvalid && (
+                    <FieldError errors={field.state.meta.errors} />
+                  )}
                 </Field>
               );
             }}
@@ -291,7 +352,14 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                 className="w-full"
                 disabled={!canSubmit || isSubmitting}
               >
-                {isSubmitting ? "Creating..." : "Create Repository"}
+                {isSubmitting ? (
+                  <>
+                    <LoaderIcon className="mr-2 size-3 animate-spin" />
+                    Creating Repository...
+                  </>
+                ) : (
+                  "Create Repository"
+                )}
               </Button>
             )}
           </form.Subscribe>
@@ -302,15 +370,18 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
 
   const getStatusIcon = () => {
     if (exportStatus === "exporting") {
-      return <LoaderIcon className="size-3.5 animate-spin" />;
+      return <LoaderIcon className="size-4 animate-spin" />;
     }
+
     if (exportStatus === "completed") {
-      return <CheckCheckIcon className="size-3.5 text-emerald-500" />;
+      return <CheckCheckIcon className="size-4 text-emerald-300" />;
     }
+
     if (exportStatus === "failed") {
-      return <XCircleIcon className="size-3.5 text-red-500" />;
+      return <XCircleIcon className="size-4 text-red-300" />;
     }
-    return <FaGithub className="size-3.5" />;
+
+    return <FaGithub className="size-4" />;
   };
 
   return (
@@ -321,7 +392,8 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
           <span className="text-sm">Export</span>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="start">
+
+      <PopoverContent className="w-96" align="start">
         {renderContent()}
       </PopoverContent>
     </Popover>
