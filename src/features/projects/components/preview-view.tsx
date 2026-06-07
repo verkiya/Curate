@@ -26,6 +26,7 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
     useWebContainer({
       projectId,
       enabled: true,
+      isImporting: project?.importStatus === "importing",
       settings: project?.settings,
     });
 
