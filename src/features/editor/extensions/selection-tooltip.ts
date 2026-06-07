@@ -134,7 +134,7 @@ const createTooltipForSelection = (state: EditorState): readonly Tooltip[] => {
 
         const quickEditButton = createActionButton({
           label: "Quick Edit",
-          shortcut: "⌘K",
+          shortcut: "CTRL + .",
           icon: quickEditIcon,
           isPrimary: true,
           onClick: () => {
