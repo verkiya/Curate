@@ -29,8 +29,9 @@ export const createCreateFilesTool = ({
     parameters: z.object({
       parentId: z
         .string()
+        .optional()
         .describe(
-          "The ID of the parent folder. Use empty string for root level. Must be a valid folder ID from listFiles.",
+          "Optional Convex Database ID of the parent folder (obtainable via listFiles). Use an empty string for root. Do not pass file paths.",
         ),
       files: z
         .array(

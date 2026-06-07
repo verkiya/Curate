@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/:path*", // Could use source:"/projects/:path*" for better security
         headers: [
           {
             key: "Cross-Origin-Embedder-Policy",

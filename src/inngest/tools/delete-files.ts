@@ -21,7 +21,7 @@ export const createDeleteFilesTool = ({
     parameters: z.object({
       fileIds: z
         .array(z.string())
-        .describe("Array of file or folder IDs to delete"),
+        .describe("Array of Convex Database IDs of the files/folders to delete (obtainable via listFiles). Do not pass file paths."),
     }),
     handler: async (params, { step: toolStep }) => {
       const parsed = paramsSchema.safeParse(params);
@@ -36,10 +36,20 @@ export const createDeleteFilesTool = ({
         type: string;
       }[] = [];
       for (const fileId of fileIds) {
-        const file = await convex.query(api.system.getFileById, {
-          internalKey,
-          fileId: fileId as Id<"files">,
-        });
+        let file;
+        try {
+          //Validate the file exists before running the step
+          file = await convex.query(api.system.getFileById, {
+            internalKey,
+            fileId: fileId as Id<"files">,
+          });
+        } catch (error) {
+          if (error instanceof Error && error.message.includes("ArgumentValidationError")) {
+             return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
+          }
+          return `Error validating file: ${error instanceof Error ? error.message : "Unknown error"}`;
+        }
+
         if (!file) {
           return `Error: File with ID "${fileId}" not found. Use listFiles to get valid file IDs.`;
         }

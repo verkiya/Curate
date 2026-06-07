@@ -115,7 +115,9 @@ export const useWebContainer = ({
           if (cancelled) return;
           console.error("[webcontainer] runtime error:", err);
           setError(
-            err instanceof Error ? err.message : "Container crashed unexpectedly",
+            err instanceof Error
+              ? err.message
+              : "Container crashed unexpectedly",
           );
           setStatus("error");
         });

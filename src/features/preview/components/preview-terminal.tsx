@@ -134,10 +134,5 @@ export const PreviewTerminal = ({ output }: PreviewTerminalProps) => {
     }
   }, [output]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="preview-terminal flex-1 min-h-0"
-    />
-  );
+  return <div ref={containerRef} className="preview-terminal flex-1 min-h-0" />;
 };

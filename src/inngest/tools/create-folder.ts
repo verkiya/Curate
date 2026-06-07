@@ -22,8 +22,9 @@ export const createCreateFolderTool = ({
       name: z.string().describe("The name of the folder to create."),
       parentId: z
         .string()
+        .optional()
         .describe(
-          "The ID (not name!) of the parent folder from listFiles, or empty string for root level",
+          "Optional Convex Database ID of the parent folder (obtainable via listFiles). Use an empty string for root. Do not pass file paths.",
         ),
     }),
     handler: async (params, { step: toolStep }) => {

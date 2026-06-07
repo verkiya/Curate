@@ -11,11 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Field,
-  FieldLabel,
-  FieldDescription,
-} from "@/components/ui/field";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import { Doc, Id } from "../../../../convex/_generated/dataModel";
@@ -101,9 +97,7 @@ export const PreviewSettingsPopover = ({
         >
           <div className="space-y-4">
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold">
-                Preview Settings
-              </h4>
+              <h4 className="text-sm font-semibold">Preview Settings</h4>
 
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Configure how your project runs in the preview environment.
@@ -113,24 +107,20 @@ export const PreviewSettingsPopover = ({
             <form.Field name="installCommand">
               {(field) => (
                 <Field>
-                  <FieldLabel htmlFor={field.name}>
-                    Install Command
-                  </FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Install Command</FieldLabel>
 
                   <Input
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) =>
-                      field.handleChange(e.target.value)
-                    }
+                    onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="npm install | pnpm install"
                     className="font-mono text-xs ring-primary ring-1"
                   />
 
                   <FieldDescription>
-                   Command to install dependencies
+                    Command to install dependencies
                   </FieldDescription>
                 </Field>
               )}
@@ -139,18 +129,14 @@ export const PreviewSettingsPopover = ({
             <form.Field name="devCommand">
               {(field) => (
                 <Field>
-                  <FieldLabel htmlFor={field.name}>
-                    Start Command
-                  </FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Start Command</FieldLabel>
 
                   <Input
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) =>
-                      field.handleChange(e.target.value)
-                    }
+                    onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="npm run dev | vite"
                     className="font-mono text-xs ring-1 ring-primary"
                   />
@@ -179,10 +165,7 @@ export const PreviewSettingsPopover = ({
               </Button>
 
               <form.Subscribe
-                selector={(state) => [
-                  state.canSubmit,
-                  state.isSubmitting,
-                ]}
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
               >
                 {([canSubmit, isSubmitting]) => (
                   <Button

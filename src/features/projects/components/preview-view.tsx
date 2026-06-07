@@ -83,9 +83,7 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
                 <span>Ready to preview</span>
               )}
 
-              {error && (
-                <span className="text-red-400">Container error</span>
-              )}
+              {error && <span className="text-red-400">Container error</span>}
             </div>
           </div>
         </div>

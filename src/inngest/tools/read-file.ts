@@ -17,7 +17,7 @@ export const createReadFilesTool = ({ internalKey }: ReadFilesToolOptions) => {
     description:
       "Read the content of files from the project. Returns file contents.",
     parameters: z.object({
-      fileIds: z.array(z.string()).describe("Array of file IDs to read"),
+      fileIds: z.array(z.string()).describe("Array of Convex Database IDs of the files to read (obtainable via listFiles). Do not pass file paths."),
     }),
     handler: async (params, { step: toolStep }) => {
       const parsed = paramsSchema.safeParse(params);
@@ -29,10 +29,24 @@ export const createReadFilesTool = ({ internalKey }: ReadFilesToolOptions) => {
         return await toolStep?.run("read-files", async () => {
           const results: { id: string; name: string; content: string }[] = [];
           for (const fileId of fileIds) {
-            const file = await convex.query(api.system.getFileById, {
-              internalKey,
-              fileId: fileId as Id<"files">,
-            });
+            let file;
+            try {
+              file = await convex.query(api.system.getFileById, {
+                internalKey,
+                fileId: fileId as Id<"files">,
+              });
+            } catch (error) {
+              if (
+                error instanceof Error &&
+                error.message.includes("ArgumentValidationError")
+              ) {
+                return `Error: Invalid file ID format for "${fileId}". You must pass the actual file ID (e.g. from listFiles), not the file path or name.`;
+              }
+              return `Error validating file: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`;
+            }
+
             if (file && file.content) {
               results.push({
                 id: file._id,
