@@ -272,9 +272,7 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                     {field.state.value || "repository-name"}
                   </div>
 
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
@@ -334,9 +332,7 @@ export const ExportPopover = ({ projectId }: ExportPopoverProps) => {
                     {field.state.value.length}/350
                   </div>
 
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}

@@ -88,7 +88,7 @@ export const ImportGithubDialog = ({
           const body = await error.response.json<{ error: string }>();
 
           if (body.error?.includes("Pro plan required")) {
-            toast.error("Upgrade to import repositories", {
+            toast.info("Upgrade to import repositories", {
               action: {
                 label: "Upgrade",
                 onClick: () => openUserProfile(),
@@ -148,9 +148,7 @@ export const ImportGithubDialog = ({
 
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>
-                    Repository URL
-                  </FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Repository URL</FieldLabel>
 
                   <Input
                     id={field.name}
@@ -163,9 +161,7 @@ export const ImportGithubDialog = ({
                     className="font-mono text-xs"
                   />
 
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
@@ -184,10 +180,7 @@ export const ImportGithubDialog = ({
               selector={(state) => [state.canSubmit, state.isSubmitting]}
             >
               {([canSubmit, isSubmitting]) => (
-                <Button
-                  type="submit"
-                  disabled={!canSubmit || isSubmitting}
-                >
+                <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && (
                     <Loader2Icon className="mr-2 size-3 animate-spin" />
                   )}

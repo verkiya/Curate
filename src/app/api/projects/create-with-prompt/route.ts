@@ -1,12 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import {
-  adjectives,
-  animals,
-  colors,
-  uniqueNamesGenerator,
-} from "unique-names-generator";
+import { animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 import { DEFAULT_CONVERSATION_TITLE } from "@/features/conversations/constants";
 import { inngest } from "@/inngest/client";
 import { convex } from "@/lib/convex-client";
