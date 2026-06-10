@@ -7,9 +7,5 @@ import { exportToGithub } from "@/features/projects/inngest/export-to-github";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [
-    processMessage,
-    importGithubRepo,
-    exportToGithub,
-  ],
+  functions: [processMessage, importGithubRepo, exportToGithub],
 });

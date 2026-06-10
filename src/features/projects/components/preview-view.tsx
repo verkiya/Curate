@@ -196,78 +196,104 @@ export const PreviewView = ({ projectId }: { projectId: Id<"projects"> }) => {
   );
 };
 
-/* ------------------------------------------------ */
-/* Boot animation (infinite looping logs)           */
-/* ------------------------------------------------ */
-
-const bootLogs = [
-  "Starting Curate dev container...",
-  "Initializing sandbox runtime...",
-  "Mounting project filesystem...",
-  "Installing dependencies...",
-  "Resolving packages...",
-  "Configuring runtime...",
-  "Starting dev server...",
-  "Preparing preview...",
-  "Checking cache...",
-  "Watching files...",
-  "Optimizing bundle...",
-  "Hot reload ready...",
-  "Container heartbeat OK...",
-];
-
 function BootAnimation() {
-  const [visibleLines, setVisibleLines] = useState<string[]>([]);
-
-  useEffect(() => {
-    let index = 0;
-
-    const interval = setInterval(() => {
-      setVisibleLines((prev) => {
-        const next = [...prev, bootLogs[index]];
-
-        // Keep only the last 10 lines visible
-        return next.slice(-10);
-      });
-
-      // Loop forever
-      index = (index + 1) % bootLogs.length;
-    }, 1200);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="w-[520px] max-w-[90%] bg-black/80 rounded-md border border-border text-green-400 font-mono text-xs p-4 shadow-xl">
-      <div className="flex items-center gap-2 mb-3 text-gray-400">
-        <TerminalSquareIcon className="size-3" />
-        container boot
+    <div className="flex flex-col items-center justify-center gap-8">
+      {/* Core animation */}
+      <div className="relative flex items-center justify-center">
+        {/* Outer ring */}
+        <motion.div
+          className="absolute h-40 w-40 rounded-full border border-primary/20"
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+
+        {/* Middle ring */}
+        <motion.div
+          className="absolute h-28 w-28 rounded-full border border-primary/40"
+          animate={{
+            rotate: -360,
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+
+        {/* Pulse */}
+        <motion.div
+          className="absolute h-16 w-16 rounded-full bg-primary/15"
+          animate={{
+            scale: [1, 1.35, 1],
+            opacity: [0.3, 0.9, 0.3],
+          }}
+          transition={{
+            duration: 2.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+        {/* Core */}
+        <motion.div
+          className="h-5 w-5 rounded-full bg-primary"
+          animate={{
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+          }}
+        />
       </div>
 
-      <div className="flex flex-col gap-1">
-        {visibleLines.map((line, i) => (
-          <motion.div
-            key={`${line}-${i}`}
-            initial={{ opacity: 0, y: 2 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            $ {line}
-          </motion.div>
-        ))}
+      {/* Status */}
+      <div className="text-center">
+        <motion.div
+          className="text-sm font-medium"
+          animate={{
+            opacity: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+          }}
+        >
+          Initializing Curate Runtime
+        </motion.div>
 
-        <div className="flex items-center">
-          <span>$ </span>
-
-          <motion.span
-            className="ml-1 w-[6px] h-[12px] bg-green-400 inline-block"
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-            }}
-          />
+        <div className="mt-2 text-xs text-muted-foreground">
+          Preparing workspace, dependencies and preview environment
         </div>
+      </div>
+
+      {/* Progress bars */}
+      <div className="w-80 space-y-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-1 overflow-hidden rounded-full bg-muted"
+          >
+            <motion.div
+              className="h-full bg-primary"
+              animate={{
+                x: ["-100%", "300%"],
+              }}
+              transition={{
+                duration: 1.8 + i * 0.3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

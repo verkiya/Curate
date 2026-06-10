@@ -84,7 +84,13 @@ export const useWebContainer = ({
   //Fetch files from Convex (auto-updates )
   const files = useFiles(projectId);
   useEffect(() => {
-    if (!enabled || !files || files.length === 0 || hasStartedRef.current || isImporting) {
+    if (
+      !enabled ||
+      !files ||
+      files.length === 0 ||
+      hasStartedRef.current ||
+      isImporting
+    ) {
       return;
     }
     hasStartedRef.current = true;
