@@ -1,97 +1,4 @@
-// Use this for Claude
-// import { generateText, Output } from "ai";
-// import { NextResponse } from "next/server";
-// import { z } from "zod";
-// import { anthropic } from "@ai-sdk/anthropic";
-// import { auth } from "@clerk/nextjs/server";
-
-// const suggestionSchema = z.object({
-//   suggestion: z
-//     .string()
-//     .describe(
-//       "The code to insert at cursor, or empty string if no completion needed",
-//     ),
-// });
-
-// const SUGGESTION_PROMPT = `You are a code suggestion assistant.
-
-// <context>
-// <file_name>{fileName}</file_name>
-// <previous_lines>
-// {previousLines}
-// </previous_lines>
-// <current_line number="{lineNumber}">{currentLine}</current_line>
-// <before_cursor>{textBeforeCursor}</before_cursor>
-// <after_cursor>{textAfterCursor}</after_cursor>
-// <next_lines>
-// {nextLines}
-// </next_lines>
-// <full_code>
-// {code}
-// </full_code>
-// </context>
-
-// <instructions>
-// Follow these steps IN ORDER:
-
-// 1. First, look at next_lines. If next_lines contains ANY code, check if it continues from where the cursor is. If it does, return empty string immediately - the code is already written.
-
-// 2. Check if before_cursor ends with a complete statement (;, }, )). If yes, return empty string.
-
-// 3. Only if steps 1 and 2 don't apply: suggest what should be typed at the cursor position, using context from full_code.
-
-// Your suggestion is inserted immediately after the cursor, so never suggest code that's already in the file.
-// </instructions>`;
-
-// export async function POST(request: Request) {
-//   try {
-//     const { userId } = await auth();
-//     if (!userId) {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
-
-//     const {
-//       fileName,
-//       code,
-//       currentLine,
-//       previousLines,
-//       textBeforeCursor,
-//       textAfterCursor,
-//       nextLines,
-//       lineNumber,
-//     } = await request.json();
-
-//     if (!code) {
-//       return NextResponse.json({ error: "Code is required" }, { status: 400 });
-//     }
-
-//     const prompt = SUGGESTION_PROMPT.replace("{fileName}", fileName)
-//       .replace("{code}", code)
-//       .replace("{currentLine}", currentLine)
-//       .replace("{previousLines}", previousLines || "")
-//       .replace("{textBeforeCursor}", textBeforeCursor)
-//       .replace("{textAfterCursor}", textAfterCursor)
-//       .replace("{nextLines}", nextLines || "")
-//       .replace("{lineNumber}", lineNumber.toString());
-
-//     const { output } = await generateText({
-//       model: anthropic("claude-haiku-4-5-20251001"), //claude-haiku-4-5-20251001
-//       output: Output.object({ schema: suggestionSchema }),
-//       prompt,
-//       maxRetries: 0,
-//       maxOutputTokens: 128,
-//       temperature: 0,
-//     });
-
-//     return NextResponse.json({ suggestion: output.suggestion });
-//   } catch (error) {
-//     console.error("Suggestion error: ", error);
-//     return NextResponse.json(
-//       { error: "Failed to generate suggestion" },
-//       { status: 500 },
-//     );
-//   }
-// }
+// Inline suggestion completion route
 import { generateText, Output } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -195,7 +102,9 @@ export async function POST(request: Request) {
     let isFallback = false;
 
     try {
-      // 1. Try to reserve a Gemini model from Convex
+      // 1. Try to reserve a Gemini model from Convex.
+      // We use Gemini first for suggestions because it provides extremely high RPM limits,
+      // which is critical for high-frequency operations like ghost text autocomplete.
       const modelName = await fetchMutation(
         api.GeminiAi.reserveSuggestionModel,
       );
@@ -203,6 +112,8 @@ export async function POST(request: Request) {
       aiModel = google(modelName);
     } catch (routeError) {
       // 2. All Gemini quotas exhausted in Convex -> start with fallback
+      // If the user types too fast and hits the 95% safety margin of Gemini,
+      // we immediately switch to Claude Haiku to ensure suggestions don't just silently stop.
       console.warn(
         "[suggestions] Convex quotas exhausted. Starting with fallback:",
         routeError,
@@ -230,7 +141,9 @@ export async function POST(request: Request) {
       const suggestion = await runGeneration(aiModel);
       return NextResponse.json({ suggestion });
     } catch (generationError: any) {
-      // Safely handle empty parsing / intentional empty outputs
+      // Triple Error Handling Strategy:
+      // 1. Parsing errors (model failed to return valid JSON schema) -> gracefully return empty string
+      //    instead of crashing the ghost text UI.
       if (
         generationError?.name === "AI_NoOutputGeneratedError" ||
         generationError?.name === "JSONParseError" ||
@@ -239,6 +152,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ suggestion: "" });
       }
 
+      // 2. Rate Limit (429) errors from the provider
       // If the API throws 429/RESOURCE_EXHAUSTED and we HAVEN'T tried the fallback yet
       if (
         !isFallback &&
@@ -274,6 +188,7 @@ export async function POST(request: Request) {
         }
       }
 
+      // 3. General unhandled errors
       // If we were already on fallback and it 429'd
       if (
         isFallback &&

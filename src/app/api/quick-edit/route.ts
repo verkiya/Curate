@@ -85,6 +85,8 @@ export async function POST(request: Request) {
 
     const { selectedCode, fullCode, instruction } = body;
 
+    // Extract up to MAX_URLS from the instruction to provide live context.
+    // This allows users to say "make this look like https://example.com/docs"
     const urls = [...new Set(instruction.match(URL_REGEX) || [])].slice(
       0,
       MAX_URLS,
@@ -96,6 +98,8 @@ export async function POST(request: Request) {
       const scrapedResults = await Promise.all(
         urls.map(async (url) => {
           try {
+            // Firecrawl can sometimes hang indefinitely on certain websites.
+            // A strict 5-second timeout ensures the AI request doesn't stall completely just because of one bad URL.
             const result = await Promise.race([
               firecrawl.scrape(url, {
                 formats: ["markdown"],
@@ -135,6 +139,8 @@ ${validResults.join("\n\n")}
       }
     }
 
+    // Protect the context window by truncating extremely large files.
+    // We keep the top half and bottom half so imports and exports/bottom-level logic remain visible.
     const trimmedFullCode =
       fullCode && fullCode.length > MAX_FULL_CODE_CHARS
         ? `${fullCode.slice(0, MAX_FULL_CODE_CHARS / 2)}\n\n...TRUNCATED...\n\n${fullCode.slice(-(MAX_FULL_CODE_CHARS / 2))}`
@@ -145,6 +151,9 @@ ${validResults.join("\n\n")}
       .replace("{instruction}", instruction)
       .replace("{documentation}", documentationContext);
 
+    // Dynamic model routing:
+    // If the selection is large, we use Sonnet as it handles large reasoning blocks better.
+    // If it's small (< 1500 chars), Haiku is much faster and cheaper while still capable of simple edits.
     const model =
       selectedCode.length > 1500
         ? anthropic(CLAUDE_MODELS.sonnet)

@@ -110,18 +110,24 @@ export const PreviewTerminal = ({ output }: PreviewTerminalProps) => {
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-    // output intentionally omitted - only used during mount
+    // The `output` prop is intentionally omitted from the dependency array.
+    // This effect is ONLY for mounting and initializing the terminal once.
+    // The second effect handles subsequent output updates incrementally.
   }, []);
 
-  // Write output
+  // Write output incrementally
   useEffect(() => {
     if (!terminalRef.current) return;
 
+    // If the new output is shorter than what we've tracked, it means the terminal was cleared or restarted.
+    // We clear the terminal and reset our length tracker to start fresh.
     if (output.length < lastLengthRef.current) {
       terminalRef.current.clear();
       lastLengthRef.current = 0;
     }
 
+    // Only write the NEW characters to the terminal.
+    // Writing the entire `output` string on every render would cause severe performance issues and flickering.
     const newData = output.slice(lastLengthRef.current);
 
     if (newData) {

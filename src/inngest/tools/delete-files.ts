@@ -31,7 +31,8 @@ export const createDeleteFilesTool = ({
         return `Error: ${parsed.error.issues[0].message}`;
       }
       const { fileIds } = parsed.data;
-      // Validate all files exist before running the step
+      // Pre-validation pattern: Validate ALL files exist before executing ANY deletions.
+      // This ensures we don't end up in a partially-deleted state if the agent provides one valid ID and one invalid ID.
       const filesToDelete: {
         id: string;
         name: string;
@@ -46,6 +47,8 @@ export const createDeleteFilesTool = ({
             fileId: fileId as Id<"files">,
           });
         } catch (error) {
+          // Guard against agent hallucinating file paths instead of Convex IDs.
+          // Returns a helpful message forcing the agent to use listFiles instead of crashing.
           if (
             error instanceof Error &&
             error.message.includes("ArgumentValidationError")

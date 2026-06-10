@@ -54,12 +54,6 @@ let isWaitingForSuggestion = false;
 const DEBOUNCE_DELAY = 500; // Firing the request for autosuggestion
 let currentAbortController: AbortController | null = null;
 
-// const generateFakeSuggestion = (textBeforeCursor: string): string | null => {
-//   const trimmed = textBeforeCursor.trimEnd();
-//   if (trimmed.endsWith("const")) return "myVariable = ";
-//   return null;
-// };
-
 const generatePayload = (view: EditorView, fileName: string) => {
   const code = view.state.doc.toString();
   if (!code || code.trim().length === 0) return null;
@@ -97,8 +91,10 @@ const createDebouncePlugin = (fileName: string) => {
     class {
       constructor(_view: EditorView) {}
       update(update: ViewUpdate) {
+        // Curate Improvement: We only trigger suggestions on `docChanged` (actual typing),
+        // intentionally omitting `selectionSet` (cursor movement).
+        // Triggering AI network requests purely on cursor movement causes massive unnecessary API calls and rate limiting.
         if (update.docChanged) {
-          // || update.selectionSet Cursor movement should not trigger AI network requests. Only actual document edits should.
           this.triggerSuggestion(update.view);
         }
       }
@@ -117,16 +113,15 @@ const createDebouncePlugin = (fileName: string) => {
             view.dispatch({ effects: setSuggestionEffect.of(null) });
             return;
           }
+          // The AbortController ensures that if the user keeps typing before the AI responds,
+          // the old HTTP request is cancelled. This prevents race conditions where an older,
+          // stale suggestion arrives after a newer one and overwrites it.
           currentAbortController = new AbortController();
           const suggestion = await fetcher(
             payload,
             currentAbortController.signal,
           );
-          //Fake suggestion here for a while
-          // const cursor = view.state.selection.main.head;
-          // const line = view.state.doc.lineAt(cursor);
-          // const textBeforeCursor = line.text.slice(0, cursor - line.from);
-          // const suggestion = generateFakeSuggestion(textBeforeCursor);
+
           isWaitingForSuggestion = false;
           view.dispatch({
             effects: setSuggestionEffect.of(suggestion), //Update the suggestion state with the new suggestion text

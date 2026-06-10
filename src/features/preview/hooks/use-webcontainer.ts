@@ -4,7 +4,8 @@ import { buildFileTree, getFilePath } from "../utils/file-tree";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { useFiles } from "@/features/projects/hooks/use-files";
 
-//Singleton Webcontainer instance
+// Singleton WebContainer instance.
+// Only a single WebContainer can be running in the browser at a time due to SharedArrayBuffer constraints.
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
 let cleanupPromise: Promise<void> | null = null;
@@ -37,7 +38,9 @@ const teardownWebContainer = () => {
     webcontainerInstance = null;
     bootPromise = null;
   } else if (bootPromise) {
-    // Boot is still in progress — schedule teardown for when it completes
+    // Boot is still in progress — schedule teardown for when it completes.
+    // This is a crucial Curate improvement: if a user navigates away while WebContainer is booting,
+    // we must wait for boot to finish before tearing it down to avoid orphaned instances and subsequent boot failures.
     const pendingBoot = bootPromise;
     bootPromise = null;
     cleanupPromise = pendingBoot
@@ -94,6 +97,9 @@ export const useWebContainer = ({
       return;
     }
     hasStartedRef.current = true;
+
+    // The `cancelled` flag is critical to prevent state updates after this hook is unmounted
+    // while the async WebContainer operations are still running in the background.
     let cancelled = false;
 
     const start = async () => {
@@ -189,7 +195,11 @@ export const useWebContainer = ({
   // Sync file changes (hot-reload)
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !files) return; // Removed `status !== "running"` check
+
+    // In Polaris, there was a check `if (status !== "running") return;`
+    // Curate removes this check to allow files to sync while the container is installing/booting,
+    // preventing the loss of edits made during the initial spin-up phase.
+    if (!container || !files) return;
 
     const syncFiles = async () => {
       const filesMap = new Map(files.map((f) => [f._id, f]));
@@ -210,7 +220,7 @@ export const useWebContainer = ({
       }
     };
     syncFiles();
-  }, [files]); // Removed `status` from deps
+  }, [files]); // `status` intentionally removed from dependencies
 
   //Reset when disabled
   useEffect(() => {

@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*", // Could use source:"/projects/:path*" for better security
         headers: [
+          // WebContainers require SharedArrayBuffer, which browsers block by default due to Spectre mitigations.
+          // These COEP and COOP headers opt the site into Cross-Origin Isolation, enabling SharedArrayBuffer.
+          // Without these, the WebContainer will fail to boot entirely.
           {
             key: "Cross-Origin-Embedder-Policy",
             value: "credentialless",
@@ -22,6 +25,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // turbopack empty config workaround:
   // Provide an explicit, possibly-empty Turbopack config so Next.js
   // doesn't error when a webpack config is present (e.g. from plugins).
   turbopack: {},

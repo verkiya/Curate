@@ -1,3 +1,6 @@
+// Tiered Model Strategy
+// We split tasks between fast/cheap models (Haiku, Gemini Flash) and capable/expensive models (Sonnet, Opus).
+// This reduces token costs for high-frequency operations like suggestions and titles, while preserving reasoning power for agents.
 export const CLAUDE_MODELS = {
   // Fast, cheap, latency-sensitive tasks (autocomplete fallback, simple edits, chat fallbacks, title generation)
   haiku: "claude-haiku-4-5-20251001",

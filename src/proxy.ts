@@ -1,7 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Clerk must allow these through so providers.tsx can render UnauthenticatedView.
-// "/" is public here only at the edge — providers still gates ProjectsView behind auth.
+// In Next.js 16, middleware.ts was renamed to proxy.ts.
+// Clerk must allow these through at the edge so providers.tsx can render public pages.
+// "/" is public here only at the edge — providers.tsx still gates ProjectsView behind auth.
 const isPublicRoute = createRouteMatcher([
   "/",
   "/learnings(.*)",

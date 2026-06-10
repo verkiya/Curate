@@ -39,6 +39,10 @@ export const createUpdateFileTool = ({
           fileId: fileId as Id<"files">,
         });
       } catch (error) {
+        // This is a critical Curate improvement.
+        // AI agents frequently hallucinate file paths instead of Convex Database IDs.
+        // If we pass a file path to `getFileById`, Convex throws an ArgumentValidationError.
+        // Catching this specifically allows us to return a helpful error to the agent, guiding it to use `listFiles` to get the correct ID, rather than crashing the workflow.
         if (
           error instanceof Error &&
           error.message.includes("ArgumentValidationError")
