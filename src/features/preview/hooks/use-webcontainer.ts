@@ -196,7 +196,7 @@ export const useWebContainer = ({
   useEffect(() => {
     const container = containerRef.current;
 
-    // In Polaris, there was a check `if (status !== "running") return;`
+    // In a previous iteration, there was a check `if (status !== "running") return;`
     // Curate removes this check to allow files to sync while the container is installing/booting,
     // preventing the loss of edits made during the initial spin-up phase.
     if (!container || !files) return;

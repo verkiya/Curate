@@ -5,16 +5,26 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowLeft,
+  BookOpen,
   BrainCircuit,
+  ChevronRight,
   Code2,
   Database,
   GitBranch,
+  Layers,
   Network,
+  RefreshCcw,
+  Shield,
   ShieldCheck,
+  Timer,
   Wrench,
   Workflow,
   Zap,
 } from "lucide-react";
+
+// ─────────────────────────────────────────────
+// Data
+// ─────────────────────────────────────────────
 
 type Decision = {
   title: string;
@@ -25,28 +35,117 @@ type Decision = {
   icon: ReactNode;
 };
 
-type ModelInventoryItem = {
+type ModelRoute = {
   route: string;
   model: string;
-  role: string;
+  criteria: string;
+  why: string;
   tradeoff: string;
 };
 
-type PolarisDelta = {
-  label: string;
-  current: string;
-  reference: string;
-  lesson: string;
+type TechChoice = {
+  technology: string;
+  role: string;
+  why: string;
+  alternative: string;
+  whyNot: string;
 };
+
+type Pitfall = {
+  title: string;
+  symptom: string;
+  cause: string;
+  fix: string;
+  evidence: string;
+};
+
+type MaintenanceNote = {
+  area: string;
+  warning: string;
+  context: string;
+};
+
+// ── Architecture Decisions ──
+
+const architectureDecisions: Decision[] = [
+  {
+    title: "State is split by lifecycle",
+    decision:
+      "Convex owns durable state (projects, files, messages, binary storage, AI quotas). Zustand owns ephemeral state (tabs, active file, layout). CodeMirror owns transient keystroke-level state.",
+    why: "Durable project data, local IDE UX, and transient editor transactions have vastly different lifecycles. Putting keystrokes in a database adds 50ms+ round-trip latency. Putting files in memory loses data on tab close.",
+    tradeoff:
+      "No dirty-buffer conflict model. Autosave is a 300ms debounce to Convex. Two users editing the same file would overwrite each other.",
+    evidence:
+      "convex/schema.ts, src/features/editor/store/use-editor-store.ts, src/features/editor/components/editor-view.tsx",
+    icon: <Database className="size-4" />,
+  },
+  {
+    title: "Inngest owns all durable workflows",
+    decision:
+      "AI coding loops, GitHub imports, and GitHub exports are event-driven Inngest functions that mutate Convex through internal APIs using a shared secret key.",
+    why: "These operations take seconds to minutes, must survive browser tab closures and serverless timeouts, and need cancellation and failure recovery hooks.",
+    tradeoff:
+      "Requires placeholder message rows, status fields, cancellation events, a 1-second DB sync wait, and a shared CURATE_CONVEX_INTERNAL_KEY. Leaking the key bypasses all Clerk auth.",
+    evidence:
+      "src/features/conversations/inngest/process-message.ts, src/features/projects/inngest/import-github-repo.ts, export-to-github.ts",
+    icon: <Workflow className="size-4" />,
+  },
+  {
+    title: "WebContainers are a strictly managed singleton",
+    decision:
+      "One WebContainer per browser tab, enforced by module-level variables: webcontainerInstance, bootPromise, and cleanupPromise. Teardown waits for pending boot.",
+    why: "SharedArrayBuffer constraints and browser memory limits make multiple containers unstable. An orphaned instance from premature teardown causes unrecoverable boot failures.",
+    tradeoff:
+      "The preview is a local sandbox, not a general VM. SSR frameworks, native modules, non-JS runtimes, and interactive terminal prompts are all unsupported.",
+    evidence:
+      "src/features/preview/hooks/use-webcontainer.ts, next.config.ts",
+    icon: <Wrench className="size-4" />,
+  },
+  {
+    title: "Suggestions are editor extensions, not chat",
+    decision:
+      "Ghost text lives inside CodeMirror as a ViewPlugin, fires only on docChanged (actual typing), aborts stale requests, and accepts with Tab.",
+    why: "Autocomplete should feel like editor infrastructure with zero-lag, not a conversational request loop. Triggering on cursor movement would burn API quota on every arrow key press.",
+    tradeoff:
+      "Suggestions are intentionally narrow (single insertion point) and cannot do multi-file reasoning. The 500ms debounce trades immediate response for quota efficiency.",
+    evidence:
+      "src/features/editor/extensions/suggestion/index.ts, src/features/editor/extensions/suggestion/fetcher.ts",
+    icon: <Code2 className="size-4" />,
+  },
+  {
+    title: "Agent tools return recoverable errors",
+    decision:
+      "Tool handlers validate inputs with Zod, catch ArgumentValidationError, and return instructional error strings ('Call listFiles to get valid IDs') instead of throwing.",
+    why: "Claude often guesses file paths instead of using Convex IDs. Returning a tool error string lets the agent self-correct in the next iteration rather than crashing the Inngest function.",
+    tradeoff:
+      "Errors become conversational artifacts in the context window, consuming tokens. Critical failures still need external monitoring. No structured error classes for post-mortem analysis.",
+    evidence:
+      "src/inngest/tools/read-file.ts, update-file.ts, delete-files.ts",
+    icon: <ShieldCheck className="size-4" />,
+  },
+  {
+    title: "GitHub sync is file-system aware",
+    decision:
+      "Import sorts folders by depth (parents before children), creates Convex nodes, and stores binaries via upload URLs. Export rebuilds full paths from the parentId chain, creates Git blobs, a single tree, and one commit.",
+    why: "GitHub uses flat path-based trees. Curate uses recursive parentId nodes. Binary files need Convex storage, not text content. The translation must be explicit.",
+    tradeoff:
+      "This is import/export, not sync. No incremental updates, no branch selection (defaults to main/master), and individual file failures are logged but not surfaced to the user.",
+    evidence:
+      "src/features/projects/inngest/import-github-repo.ts, export-to-github.ts",
+    icon: <GitBranch className="size-4" />,
+  },
+];
+
+// ── AI Model Decisions ──
 
 const modelDecisions: Decision[] = [
   {
-    title: "Suggestions optimize for quota first",
+    title: "Suggestions use a distributed Gemini pool",
     decision:
-      "Ghost text reserves a Gemini Flash-family model through Convex, then falls back to Claude Haiku on quota exhaustion or provider rate limits.",
-    why: "Autocomplete is high frequency and extremely latency-sensitive. The implementation optimizes for raw request capacity and graceful degradation before deep reasoning.",
+      "Ghost text reserves a Gemini Flash model through a Convex mutation before each request. Five models with different RPM limits and weights form a pool. Selection is weighted random.",
+    why: "Autocomplete is extremely high-frequency and latency-sensitive. The Gemini free tier provides enough RPM if distributed across models. Random selection avoids the massive write contention a round-robin counter would cause.",
     tradeoff:
-      "The prompt stays narrow and schema-bound. Parser failures return an empty string, protecting typing flow but hiding some failure detail.",
+      "The 95% safety margin is conservative. The prompt must stay narrow and schema-bound (Zod). Parsing failures silently return empty strings, protecting typing flow but hiding failures.",
     evidence:
       "src/app/api/suggestion/route.ts, convex/GeminiAi.ts, src/lib/ai-models.ts",
     icon: <Zap className="size-4" />,
@@ -54,235 +153,357 @@ const modelDecisions: Decision[] = [
   {
     title: "Quick edit routes by selection size",
     decision:
-      "Selections over 1500 characters use Claude Sonnet. Smaller selections use Claude Haiku.",
-    why: "Small edits benefit more from low latency and cost. Large edits need stronger context preservation and code reasoning.",
+      "Selections ≥1500 characters use Claude Sonnet. Smaller selections use Claude Haiku.",
+    why: "Small edits benefit from low latency and cost. Large edits need stronger context preservation and code reasoning to avoid mangling surrounding code.",
     tradeoff:
-      "The threshold ignores language and semantic complexity. It needs telemetry before it becomes more than a pragmatic heuristic.",
+      "The 1500-char threshold is a pragmatic heuristic. It ignores language, semantic complexity, and task difficulty. Needs telemetry before it can become more sophisticated.",
     evidence: "src/app/api/quick-edit/route.ts",
     icon: <Network className="size-4" />,
   },
   {
-    title: "The agent defaults to Sonnet",
+    title: "The coding agent defaults to Sonnet",
     decision:
-      "The AgentKit coding loop uses Claude Sonnet with file tools, temperature 0.2, max 8000 output tokens, and maxIter 5.",
-    why: "Sonnet is the balanced coding model: good tool use and code generation without the cost and latency profile of Opus.",
+      "AgentKit uses Claude Sonnet 4.6 with temperature 0.2, 8000 max output tokens, and maxIter 5. Opus exists in constants but has no active route.",
+    why: "Sonnet is the balanced coding model: good tool use, good code generation, without the cost and latency of Opus. Five iterations is sufficient for most multi-step file modifications.",
     tradeoff:
-      "Opus exists in the model constants as an escalation tier, but no active route uses it today. Treat it as reserved capacity for future deep reasoning, not current behavior.",
+      "Opus is reserved capacity for future deep reasoning escalation, not current behavior. Activating it needs a deliberate route, trigger, and budget guardrails.",
     evidence:
       "src/features/conversations/inngest/process-message.ts, src/lib/ai-models.ts",
     icon: <BrainCircuit className="size-4" />,
   },
   {
-    title: "Claude routes are not drop-in abstractions",
+    title: "Claude routes are not provider-abstract",
     decision:
-      "Tool-driven coding uses Anthropic through AgentKit. OpenAI appears in dependencies and model-access tooling, but not in active production AI routes.",
-    why: "The current agent prompt, XML structure, and router are tuned around Claude behavior, including Anthropic responses that can contain text and tool calls in the same step.",
+      "The agent prompt, XML structure, tool-call handling, and router logic are all tuned for Claude behavior — specifically that Anthropic responses can contain text and tool calls in the same step.",
+    why: "The router checks hasTextResponse && !hasToolCalls to decide when to stop. This is Claude-specific behavior. OpenAI models handle tool calls differently.",
     tradeoff:
-      "This reduces provider abstraction. Adding OpenAI later should be treated as a new route with its own prompts, tool-call stopping rules, and quality checks, not a drop-in model swap.",
+      "Adding OpenAI as a runtime AI provider should be treated as a new route with its own prompts, stopping rules, and quality checks — not a drop-in model swap.",
     evidence:
-      "src/features/conversations/inngest/constants.ts, process-message.ts, package.json, models.json",
-    icon: <ShieldCheck className="size-4" />,
+      "src/features/conversations/inngest/process-message.ts, constants.ts",
+    icon: <Shield className="size-4" />,
   },
 ];
 
-const activeModelInventory: ModelInventoryItem[] = [
+// ── AI Model Inventory ──
+
+const modelRoutes: ModelRoute[] = [
   {
-    route: "Suggestion primary pool",
-    model:
-      "gemini-3.5-flash, gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite",
-    role: "Weighted pool reserved through Convex before each ghost-text request.",
-    tradeoff:
-      "Capacity and latency over strongest reasoning; the prompt must stay narrow and schema-bound.",
+    route: "Suggestion primary",
+    model: "gemini-3.5-flash, gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite",
+    criteria: "Convex reservation (weighted random)",
+    why: "Highest RPM capacity for high-frequency autocomplete",
+    tradeoff: "Prompt must stay schema-bound. No deep reasoning.",
   },
   {
-    route: "Suggestion fallback / small edits / titles",
+    route: "Suggestion fallback",
     model: "claude-haiku-4-5-20251001",
-    role: "Fallback autocomplete, small quick edits, and deterministic title generation.",
-    tradeoff:
-      "Cheap and fast, but not for broad file rewrites or multi-step agent work.",
+    criteria: "All Gemini quotas exhausted (95% safety margin)",
+    why: "Different provider = independent quota. Suggestions never silently stop.",
+    tradeoff: "More expensive per-request than Gemini. Should be rare.",
   },
   {
-    route: "Large quick edits / coding agent",
+    route: "Small quick edit + Titles",
+    model: "claude-haiku-4-5-20251001",
+    criteria: "Selection < 1500 chars / Title generation",
+    why: "Fast, cheap. Small edits and titles don't need heavy reasoning.",
+    tradeoff: "Not suitable for large rewrites or multi-step reasoning.",
+  },
+  {
+    route: "Large quick edit + Coding agent",
     model: "claude-sonnet-4-6",
-    role: "Large selected-code edits and the primary AgentKit coding loop.",
-    tradeoff:
-      "Higher cost and latency than Haiku, but better tool-use and code-context quality.",
+    criteria: "Selection ≥ 1500 chars / Agent invocation",
+    why: "Best balance of tool use, code quality, cost, and latency.",
+    tradeoff: "Higher cost than Haiku. 8000 token output limit.",
   },
   {
-    route: "Reserved deep reasoning",
+    route: "Reserved",
     model: "claude-opus-4-8",
-    role: "Configured in CLAUDE_MODELS but unused by active runtime routes.",
-    tradeoff:
-      "Activating it needs a deliberate route, trigger, and budget guardrails.",
+    criteria: "None (configured, not routed)",
+    why: "Future deep reasoning escalation tier.",
+    tradeoff: "Needs deliberate route, trigger, and budget guardrails before activation.",
   },
 ];
 
-const architectureDecisions: Decision[] = [
+// ── Technology Choices ──
+
+const techChoices: TechChoice[] = [
   {
-    title: "State is split by lifecycle",
-    decision:
-      "Convex owns durable state (projects, files, messages, binary storage, AI quotas). Zustand owns ephemeral state (tabs, editor chrome). CodeMirror owns transient keystroke-level state.",
-    why: "Durable project data, local IDE UX, and transient editor transactions have vastly different lifecycles and persistence requirements.",
-    tradeoff:
-      "The UI stays responsive without latency jitter, but there is no dirty-buffer conflict model yet. Autosave is a 300ms debounce into Convex.",
-    evidence:
-      "convex/schema.ts, src/features/editor/store/use-editor-store.ts, src/features/editor/components/editor-view.tsx",
-    icon: <Database className="size-4" />,
+    technology: "Convex",
+    role: "Real-time database, file storage, auth, AI quota management",
+    why: "Reactive queries auto-update the UI. Built-in binary storage. Mutations work as distributed locks (rate limiting). Typed schemas with validation.",
+    alternative: "Supabase / PlanetScale + S3",
+    whyNot: "Would need a separate real-time layer (Pusher/Ably), separate blob storage, and manual type generation. More moving parts for the same result.",
   },
   {
-    title: "Inngest owns durable workflows",
-    decision:
-      "AI coding loops, GitHub imports, and GitHub exports are event-driven background jobs managed by Inngest that mutate Convex through internal APIs.",
-    why: "Operations like AI file edits, full repository traversal, binary uploads, and GitHub commits take time and must survive browser tab closures or serverless timeout windows.",
-    tradeoff:
-      "This requires placeholder rows, status fields, cancellation events, and a shared internal key. Leaking that key would bypass user-facing Clerk checks.",
-    evidence:
-      "src/app/api/messages/route.ts, src/features/*/inngest/*.ts, convex/auth.ts, convex/system.ts",
-    icon: <Workflow className="size-4" />,
+    technology: "Inngest",
+    role: "Durable background workflows (AI agent, GitHub sync)",
+    why: "Event-driven. Survives serverless timeouts. Built-in cancelOn, onFailure, step-based orchestration. Works with AgentKit for AI agent loops.",
+    alternative: "Temporal / BullMQ / Trigger.dev",
+    whyNot: "Temporal is heavy for this scale. BullMQ needs Redis infra. Trigger.dev doesn't integrate with AgentKit. Inngest's model fits serverless deployments on Vercel.",
   },
   {
-    title: "Agent tools return recoverable errors",
-    decision:
-      "Tool handlers validate inputs with Zod, catch Convex ArgumentValidationError, and tell the model to call listFiles for real IDs.",
-    why: "Models often pass string paths where Convex IDs are required. Returning a tool error string lets the agent self-correct instead of crashing the worker entirely.",
-    tradeoff:
-      "Recoverability improves, but errors become conversational artifacts in the context window. Critical failures still need external monitoring.",
-    evidence: "src/inngest/tools/read-file.ts, update-file.ts, delete-files.ts",
-    icon: <ShieldCheck className="size-4" />,
+    technology: "WebContainers",
+    role: "Browser-local Node.js runtime for live preview",
+    why: "Zero-install, zero-infra. Users get a real dev server without any backend sandbox. Secure by default (WASM sandbox, no host access).",
+    alternative: "CodeSandbox API / Stackblitz SDK / VM-based sandbox",
+    whyNot: "External sandboxes add network latency, need paid APIs, and can't do instant file sync. VM sandboxes require server infra.",
   },
   {
-    title: "WebContainers are a strictly managed singleton",
-    decision:
-      "Curate enforces exactly one active WebContainer instance, managed via a single boot promise and a queued cleanup promise. The AI agent prompt constrains generated apps to WebContainer-safe patterns.",
-    why: "SharedArrayBuffer constraints, browser memory limits, and StackBlitz runtime restrictions make running multiple live containers or unsupported environments highly unstable.",
-    tradeoff:
-      "The preview is an incredibly useful local sandbox but not a general VM. SSR frameworks, native modules, non-JS runtimes, and interactive terminal prompts are outside the supported path.",
-    evidence:
-      "src/features/preview/hooks/use-webcontainer.ts, next.config.ts, src/features/conversations/inngest/constants.ts",
-    icon: <Wrench className="size-4" />,
+    technology: "CodeMirror 6",
+    role: "Code editor with custom extensions",
+    why: "Extension architecture allows ghost text, quick edit popover, and custom themes as first-class features. No wrapper library needed.",
+    alternative: "Monaco Editor",
+    whyNot: "Monaco bundles VS Code's entire editor. Harder to customize at the extension level. CodeMirror's lighter model fits better in a browser IDE.",
   },
   {
-    title: "Suggestions are editor extensions, not chat",
-    decision:
-      "Ghost text lives inside CodeMirror, fires only on document changes, aborts stale requests, and accepts with Tab.",
-    why: "Autocomplete should feel like editor infrastructure, not a conversational request loop.",
-    tradeoff:
-      "This saves quota and typing flow, but suggestions are intentionally narrow and cannot do multi-file reasoning.",
-    evidence:
-      "src/features/editor/extensions/suggestion/index.ts, src/features/editor/extensions/suggestion/fetcher.ts",
-    icon: <Code2 className="size-4" />,
-  },
-  {
-    title: "GitHub import/export is file-system aware",
-    decision:
-      "Import sorts folders by depth and stores binaries in Convex storage. Export rebuilds full paths before creating Git blobs, one tree, and one commit.",
-    why: "GitHub trees are path-based while Curate is node-based. Binary files need storage URLs instead of text content.",
-    tradeoff:
-      "This is good for first import/export. It is not a sync engine, and import can complete after logging per-file failures.",
-    evidence:
-      "src/features/projects/inngest/import-github-repo.ts, export-to-github.ts",
-    icon: <GitBranch className="size-4" />,
+    technology: "Clerk",
+    role: "Authentication (OAuth, session management)",
+    why: "Handles OAuth providers, session tokens, and integrates directly with both Next.js middleware and Convex identity verification.",
+    alternative: "NextAuth / Auth0",
+    whyNot: "Clerk's Convex integration is native. NextAuth would need a custom adapter. Auth0 is more complex to set up.",
   },
 ];
+
+// ── Reliability Lessons ──
 
 const reliabilityLessons = [
   {
-    lesson: "Cancel and bound model work.",
-    note: "New chat messages and stop requests send message/cancel events. The AgentKit loop stops at maxIter 5 and only finishes when Claude has text with no pending tool call.",
+    title: "Cancel and bound all model work",
+    detail:
+      "The agent loop is bounded at maxIter: 5. New chat messages and stop-button clicks send message/cancel events. The Inngest cancelOn condition matches messageId, so only the correct in-progress function is terminated.",
     evidence:
-      "src/app/api/messages/route.ts, src/app/api/messages/cancel/route.ts, src/features/conversations/inngest/process-message.ts",
+      "process-message.ts (cancelOn, maxIter), src/app/api/messages/cancel/route.ts",
+    icon: <Timer className="size-4" />,
   },
   {
-    lesson: "Pre-validate destructive operations.",
-    note: "deleteFiles validates every ID before deleting anything, avoiding mixed valid/invalid partial deletes.",
+    title: "Pre-validate destructive operations",
+    detail:
+      "deleteFiles validates every file ID exists before deleting anything. This prevents mixed valid/invalid partial deletes that would leave the file tree in an inconsistent state.",
     evidence: "src/inngest/tools/delete-files.ts",
+    icon: <Shield className="size-4" />,
   },
   {
-    lesson: "Keep preview lifecycle idempotent.",
-    note: "Boot waits for cleanup, teardown waits for boot, import pauses startup, file sync runs before status === running, and terminal output writes only new bytes.",
+    title: "Keep preview lifecycle idempotent",
+    detail:
+      "Boot waits for cleanup. Teardown waits for boot. Import pauses startup. File sync runs regardless of container status (not gated on 'running'). Terminal output appends only new bytes.",
     evidence:
-      "src/features/preview/hooks/use-webcontainer.ts, src/features/preview/components/preview-terminal.tsx",
+      "use-webcontainer.ts, preview-terminal.tsx",
+    icon: <RefreshCcw className="size-4" />,
   },
   {
-    lesson: "Suggestions should not fire on cursor movement.",
-    note: "Curate triggers ghost text only on docChanged and aborts stale requests. Polaris also triggered selectionSet, which burned quota while users navigated.",
+    title: "Ghost text must not fire on cursor movement",
+    detail:
+      "The suggestion plugin triggers only on docChanged, never on selectionSet. Combined with the AbortController on each new request, stale suggestions from previous positions are automatically cancelled.",
     evidence: "src/features/editor/extensions/suggestion/index.ts",
+    icon: <Code2 className="size-4" />,
   },
   {
-    lesson: "External documentation context must be bounded.",
-    note: "Quick edit accepts at most 3 URLs, races each scrape against 5 seconds, trims docs to 3000 chars, and slices large file context.",
+    title: "Bound external documentation context",
+    detail:
+      "Quick edit accepts at most 3 URLs, races each scrape against a 5-second timeout (Firecrawl can hang), trims docs to 3000 chars, and slices large file context to 15000 chars (keeping top and bottom halves for imports/exports visibility).",
     evidence: "src/app/api/quick-edit/route.ts",
+    icon: <BookOpen className="size-4" />,
   },
   {
-    lesson: "Cross-origin isolation is the preview tax.",
-    note: "COEP/COOP headers are applied globally so SharedArrayBuffer works for WebContainers. The code notes project-only headers could be safer but are not implemented.",
+    title: "Cross-origin isolation is the preview tax",
+    detail:
+      "COEP (credentialless) and COOP (same-origin) headers are applied globally so SharedArrayBuffer works for WebContainers. Scoping to /projects/* only would be safer but isn't implemented.",
     evidence: "next.config.ts",
+    icon: <Layers className="size-4" />,
+  },
+  {
+    title: "Wait for eventual consistency",
+    detail:
+      "The agent function sleeps 1 second after receiving the message event before querying conversation history. This handles the gap between Convex write and read replica sync.",
+    evidence: "process-message.ts (step.sleep 'wait-for-db-sync')",
+    icon: <Database className="size-4" />,
   },
 ];
 
-const polarisDeltas: PolarisDelta[] = [
+// ── Common Pitfalls ──
+
+const pitfalls: Pitfall[] = [
   {
-    label: "Inherited",
-    current:
-      "Convex file tree, CodeMirror extensions, AgentKit tools, WebContainer preview, and GitHub workflows remain the architectural spine.",
-    reference:
-      "Polaris provides the tutorial baseline for the same major subsystems.",
-    lesson:
-      "Curate should keep the feature boundaries, but not assume the tutorial defaults are production-ready.",
+    title: "\"Only a single WebContainer instance\" crash",
+    symptom: "Preview fails to boot after navigation or hot reload.",
+    cause: "Previous instance wasn't torn down before new boot. Can happen if teardown is called during pending boot without awaiting it.",
+    fix: "The cleanupPromise pattern handles this. If the error still occurs, the restart button falls back to window.location.reload().",
+    evidence: "use-webcontainer.ts (teardownWebContainer, restart callback)",
   },
   {
-    label: "Improved",
-    current:
-      "Curate adds Convex-backed Gemini routing, Haiku fallback, Sonnet primary agent, maxIter 5, cleanupPromise, edit-only suggestion triggers, and WebContainer-specific prompt rules.",
-    reference:
-      "Polaris used single-model suggestions, Opus as the agent, maxIter 20, and simpler WebContainer lifecycle handling.",
-    lesson:
-      "The biggest production gains came from lowering default model cost and hardening lifecycle/rate-limit failure paths.",
+    title: "Agent passes file paths instead of Convex IDs",
+    symptom: "Tool calls fail with ArgumentValidationError.",
+    cause: "Claude guesses paths like 'src/App.jsx' instead of calling listFiles first to get the actual Convex document ID.",
+    fix: "Tools return an instructional error string telling the agent to call listFiles. The system prompt rule explicitly says: 'NEVER use file paths as IDs.'",
+    evidence: "process-message.ts (system prompt), read-file.ts",
   },
   {
-    label: "Rejected",
-    current:
-      "Curate rejects always-Opus coding, cursor-movement autocomplete, status-gated preview sync, and generic generated app rules.",
-    reference:
-      "These patterns were acceptable tutorial shortcuts but created cost, quota, or runtime fragility.",
-    lesson:
-      "Tutorial simplicity should be revisited anywhere the system crosses browser runtime, provider quota, or destructive file mutation boundaries.",
+    title: "Suggestion quota exhaustion cascade",
+    symptom: "Ghost text stops appearing for all users.",
+    cause: "All 5 Gemini models hit their 95% safety margin within the same 60-second window.",
+    fix: "The API route catches the Convex error and falls back to Claude Haiku. If Haiku also 429s, returns empty string with 429 status.",
+    evidence: "suggestion/route.ts (triple error handling)",
+  },
+  {
+    title: "GitHub import silently skips files",
+    symptom: "Imported project is missing some files.",
+    cause: "Individual file fetches in the import loop catch and log errors but continue. No user-facing report of skipped files.",
+    fix: "Known limitation. The error is logged server-side. Surfacing a per-file skip report to the user is a roadmap item.",
+    evidence: "import-github-repo.ts (catch block in create-files step)",
   },
 ];
 
-const clarificationsAndTradeoffs = [
-  "OpenAI is not an active runtime model route. The repo has OpenAI SDKs, model metadata, and access-check scripts, but production AI calls found here use Anthropic or Google.",
-  "Claude Opus is not currently used by the coding agent. It is defined as a reserved deep-reasoning tier in CLAUDE_MODELS.",
-  "The previous documentation's Claude 3.5 labels were stale. Curate routes through Claude Haiku 4.5, Sonnet 4.6, and reserved Opus 4.8 constants.",
-  "The old in-memory suggestion router is not the active path. The active rate limiter is Convex-backed in convex/GeminiAi.ts.",
+// ── Things Future Maintainers Should Not Accidentally Break ──
+
+const maintenanceNotes: MaintenanceNote[] = [
+  {
+    area: "WebContainer singleton pattern and cleanupPromise",
+    warning:
+      "Do not make webcontainerInstance, bootPromise, or cleanupPromise local to the hook. They must be module-level to survive React re-renders and enforce the singleton.",
+    context:
+      "Making them useRef or useState variables would break the singleton guarantee across component remounts. cleanupPromise ensures teardowns wait for pending boots.",
+  },
+  {
+    area: "COEP/COOP headers in next.config.ts",
+    warning:
+      "Removing these headers will silently break WebContainer boot. SharedArrayBuffer will throw without cross-origin isolation.",
+    context:
+      "The headers are global (/:path*). Scoping to /projects/* only would be better security but hasn't been tested with Clerk's iframe requirements.",
+  },
+  {
+    area: "cancelOn event matching in process-message",
+    warning:
+      "The if condition 'event.data.messageId == async.data.messageId' is Inngest expression syntax, not JavaScript. Do not refactor it.",
+    context:
+      "This matches the incoming cancel event's messageId against the original trigger event's messageId to cancel only the correct function instance.",
+  },
+  {
+    area: "The 1-second DB sync sleep",
+    warning:
+      "The step.sleep('wait-for-db-sync', '1s') in process-message is not arbitrary. Removing it causes the agent to sometimes miss the user's message in conversation history.",
+    context:
+      "Convex mutations propagate to read replicas with eventual consistency. The sleep bridges this gap.",
+  },
+  {
+    area: "Random vs. round-robin in GeminiAi.ts",
+    warning:
+      "Do not replace Math.random() with a counter-based round-robin. A counter would require a dedicated Convex row updated on every keystroke across all users.",
+    context:
+      "The comment in the code explains: random selection is statistically identical to round-robin over time, with zero write contention.",
+  },
+  {
+    area: "System prompt XML structure",
+    warning:
+      "The <identity>, <environment>, <tools>, <rules>, <workflow> XML tags are not cosmetic. Claude models are fine-tuned to parse XML-structured system prompts with higher fidelity than markdown.",
+    context:
+      "Switching to markdown headers would likely degrade tool-use accuracy and rule adherence.",
+  },
+  {
+    area: "File synchronization behavior",
+    warning:
+      "The useEffect for file sync deliberately omits 'status' from its dependency array. Do not add it back.",
+    context:
+      "Syncing only when status === 'running' would lose edits made during the install/boot phase. This was a deliberate improvement.",
+  },
+  {
+    area: "Convex vs Zustand ownership boundaries",
+    warning:
+      "Do not move open tabs or cursor position state into Convex. Do not move durable file data into Zustand.",
+    context:
+      "Convex latency (50ms+) is too slow for transient editor state. Zustand is wiped on refresh, which is fatal for project files.",
+  },
+  {
+    area: "docChanged-only suggestion triggering",
+    warning:
+      "Do not trigger AI suggestions on 'selectionSet' (cursor movement). Only trigger on 'docChanged' (actual typing).",
+    context:
+      "Triggering on cursor movement would burn through API quotas instantly as users navigate files.",
+  },
+  {
+    area: "ArgumentValidationError recovery patterns",
+    warning:
+      "AgentKit tools must catch ArgumentValidationError and return instructional strings (e.g., 'Use listFiles') instead of throwing.",
+    context:
+      "Models frequently hallucinate file paths instead of Convex IDs. Throwing crashes the Inngest function; returning strings lets the model self-correct.",
+  },
+  {
+    area: "import/export ordering requirements",
+    warning:
+      "GitHub import must sort folders by depth (parents before children). GitHub export must recursively rebuild string paths from parentIds.",
+    context:
+      "Convex uses a recursive tree. GitHub uses flat paths. Failing to sort by depth causes parent constraint violations during import.",
+  },
+  {
+    area: "Agent loop maxIter limits",
+    warning:
+      "Do not remove or arbitrarily increase the 'maxIter: 5' limit in the Inngest process-message workflow.",
+    context:
+      "Unbounded tool-calling loops can consume massive token budgets in minutes. 5 is proven sufficient for the current toolset.",
+  },
+  {
+    area: "Gemini safety margin logic",
+    warning:
+      "Do not remove the 95% safety margin check (SAFETY_FACTOR = 0.95) when reserving Gemini models in Convex.",
+    context:
+      "Reserving exactly 100% of the quota causes API rate limits during concurrent typing due to the delay between reservation and execution.",
+  },
 ];
+
+// ── Future Improvements ──
 
 const futureImprovements = [
-  "Preview settings use devCommand in UI/hook code, while the Convex schema currently documents only installCommand inside project settings.",
-  "GitHub import has no user-facing skipped-file report when individual files fail.",
-  "Model-routing thresholds are hard-coded. There is no telemetry loop yet for latency, quality, or cost by route.",
-  "Agent tools favor recoverable strings over structured error classes, which limits analysis after failures.",
+  {
+    area: "Telemetry-driven model routing",
+    detail:
+      "Model thresholds (1500 chars, maxIter 5, 95% safety margin) are all hard-coded. No runtime telemetry for latency, quality, or cost by route. Adding observability would enable data-driven tuning.",
+  },
+  {
+    area: "User-facing import error report",
+    detail:
+      "GitHub import logs file-level failures but doesn't surface them to the user. A post-import summary showing skipped files and reasons would improve trust.",
+  },
+  {
+    area: "Structured agent tool errors",
+    detail:
+      "Agent tools return plain strings for errors. Structured error classes with codes would enable better post-failure analysis and automated retry strategies.",
+  },
+  {
+    area: "Scoped COEP/COOP headers",
+    detail:
+      "Cross-origin isolation headers are applied globally. Scoping to /projects/* would reduce security surface for public pages.",
+  },
+  {
+    area: "Collaborative editing",
+    detail:
+      "Currently no conflict resolution for concurrent edits. Convex's real-time primitives could support a CRDT or OT layer, but the 300ms debounce autosave would need to be rearchitected.",
+  },
 ];
+
+// ─────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────
 
 export default function LearningsPage() {
   return (
     <main className="min-h-screen bg-background pb-28 text-foreground md:pb-32">
+      {/* ── Hero ── */}
       <div className="border-b border-border/60 bg-card/20">
         <div className="mx-auto max-w-5xl px-6 py-14 lg:px-10">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            Curate Engineering Reference
+            Curate · Engineering Reference
           </p>
 
           <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
             <div>
-              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-                Lessons from building a browser-native AI IDE
+              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+                Lessons from building a browser-native AI&nbsp;IDE
               </h1>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
-                This page is for future maintainers. It records decisions that
-                are visible in the codebase, the reason each decision exists,
-                and the tradeoff contributors should preserve or revisit.
+                This page is the project&apos;s engineering memory. It records
+                why things are built the way they are, which tradeoffs were
+                accepted, what pitfalls exist, and what a future maintainer
+                should know before changing anything.
               </p>
             </div>
 
@@ -295,11 +516,13 @@ export default function LearningsPage() {
         </div>
       </div>
 
+      {/* ── Content ── */}
       <div className="mx-auto max-w-5xl px-6 py-12 lg:px-10">
+        {/* 01 — Architecture */}
         <Section
           kicker="01"
-          title="Architecture"
-          intro="The system separates concerns by lifecycle: durable state, long-running work, browser runtime, and editor chrome each have a specific owner."
+          title="Architecture Decisions"
+          intro="The system separates concerns by lifecycle: durable state, long-running work, browser runtime, and editor chrome each have a specific owner. Every decision here has a concrete tradeoff."
         >
           <div className="grid gap-4 md:grid-cols-2">
             {architectureDecisions.map((item) => (
@@ -308,10 +531,11 @@ export default function LearningsPage() {
           </div>
         </Section>
 
+        {/* 02 — AI Decisions */}
         <Section
           kicker="02"
-          title="AI Decisions"
-          intro="Curate uses model specialization. Model choice is treated as routing infrastructure, not branding, to optimize cost, latency, and capability."
+          title="AI Model Decisions"
+          intro="Model choice is treated as routing infrastructure. Each route optimizes for a different balance of cost, latency, and capability."
         >
           <div className="grid gap-4 md:grid-cols-2">
             {modelDecisions.map((item) => (
@@ -319,76 +543,87 @@ export default function LearningsPage() {
             ))}
           </div>
 
-          <div className="mt-5 rounded-lg border border-border/60 bg-card/50 p-5">
+          <div className="mt-6 rounded-lg border border-border/60 bg-card/50 p-5">
             <h3 className="text-sm font-semibold">Active Model Inventory</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Complete routing table. OpenAI SDKs exist in the repo for tool
+              metadata, but all runtime AI routes use Anthropic or Google.
+            </p>
             <div className="mt-4 grid gap-3">
-              {activeModelInventory.map((item) => (
-                <InventoryRow key={item.route} item={item} />
+              {modelRoutes.map((item) => (
+                <ModelRow key={item.route} item={item} />
               ))}
             </div>
           </div>
         </Section>
 
+        {/* 03 — Technology Choices */}
         <Section
           kicker="03"
-          title="Reliability Lessons"
+          title="Technology Choices"
+          intro="Why each major technology was selected, what alternatives were considered, and why they were rejected."
+        >
+          <div className="grid gap-4">
+            {techChoices.map((item) => (
+              <TechChoiceCard key={item.technology} item={item} />
+            ))}
+          </div>
+        </Section>
+
+        {/* 04 — Reliability */}
+        <Section
+          kicker="04"
+          title="Reliability Patterns"
           intro="Most Curate failures come from async work, model tool use, or browser runtime lifecycle. These patterns keep failures recoverable."
         >
           <div className="grid gap-3">
             {reliabilityLessons.map((item) => (
-              <LessonRow key={item.lesson} {...item} />
+              <ReliabilityRow key={item.title} item={item} />
             ))}
           </div>
         </Section>
 
-        <Section
-          kicker="04"
-          title="Polaris Learnings"
-          intro="Polaris remains useful as the tutorial reference. Curate's important changes are the places where production constraints overruled tutorial simplicity."
-        >
-          <div className="grid gap-4 md:grid-cols-3">
-            {polarisDeltas.map((item) => (
-              <DeltaCard key={item.label} item={item} />
-            ))}
-          </div>
-        </Section>
-
+        {/* 05 — Pitfalls */}
         <Section
           kicker="05"
-          title="Clarifications & Tradeoffs"
-          intro="Important distinctions about what Curate actually implements versus common assumptions or legacy documentation."
+          title="Common Pitfalls"
+          intro="Known failure modes that have been encountered and solved (or mitigated). Check here before debugging an unfamiliar issue."
         >
-          <ul className="grid gap-3">
-            {clarificationsAndTradeoffs.map((claim) => (
-              <li
-                key={claim}
-                className="rounded-lg border border-border/60 bg-card/50 p-4 text-sm leading-6 text-muted-foreground"
-              >
-                {claim}
-              </li>
+          <div className="grid gap-4 md:grid-cols-2">
+            {pitfalls.map((item) => (
+              <PitfallCard key={item.title} item={item} />
             ))}
-          </ul>
+          </div>
         </Section>
 
+        {/* 06 — Do Not Change */}
         <Section
           kicker="06"
-          title="Future Improvements"
-          intro="These are cleanup targets and planned enhancements that future contributors should know about."
+          title="Things Future Maintainers Should Not Accidentally Break"
+          intro="Code that looks simple but has non-obvious reasons for existing. Do not change without understanding the context."
         >
-          <ul className="grid gap-3">
-            {futureImprovements.map((gap) => (
-              <li
-                key={gap}
-                className="flex gap-3 rounded-lg border border-border/60 bg-card/50 p-4 text-sm leading-6 text-muted-foreground"
-              >
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-primary" />
-                <span>{gap}</span>
-              </li>
+          <div className="grid gap-3">
+            {maintenanceNotes.map((item) => (
+              <MaintenanceRow key={item.area} item={item} />
             ))}
-          </ul>
+          </div>
+        </Section>
+
+        {/* 07 — Future */}
+        <Section
+          kicker="07"
+          title="Future Improvements"
+          intro="Cleanup targets and planned enhancements. These represent known limitations, not bugs."
+        >
+          <div className="grid gap-3">
+            {futureImprovements.map((item) => (
+              <FutureRow key={item.area} item={item} />
+            ))}
+          </div>
         </Section>
       </div>
 
+      {/* ── Footer ── */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/85 px-4 py-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex max-w-7xl justify-center">
           <Link
@@ -404,6 +639,10 @@ export default function LearningsPage() {
     </main>
   );
 }
+
+// ─────────────────────────────────────────────
+// Components
+// ─────────────────────────────────────────────
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -456,7 +695,7 @@ function DecisionCard({ item }: { item: Decision }) {
       <dl className="space-y-3 text-sm leading-6">
         <Pair label="Decision" value={item.decision} />
         <Pair label="Why" value={item.why} />
-        <Pair label="Tradeoff" value={item.tradeoff} />
+        <Pair label="Tradeoff" value={item.tradeoff} variant="warning" />
         <div>
           <dt className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Evidence
@@ -470,79 +709,179 @@ function DecisionCard({ item }: { item: Decision }) {
   );
 }
 
-function InventoryRow({ item }: { item: ModelInventoryItem }) {
+function ModelRow({ item }: { item: ModelRoute }) {
   return (
-    <article className="rounded-md border border-border/50 bg-background/50 p-3">
-      <div className="grid gap-2 md:grid-cols-[0.28fr_0.72fr]">
+    <article className="rounded-md border border-border/50 bg-background/50 p-4">
+      <div className="flex items-center justify-between gap-4">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">
           {item.route}
         </h4>
-        <div className="space-y-2">
-          <p className="font-mono text-xs leading-5 text-muted-foreground">
-            {item.model}
+        <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+          {item.model.includes(",")
+            ? `${item.model.split(",").length} models`
+            : item.model}
+        </span>
+      </div>
+      <div className="mt-3 space-y-1.5">
+        <p className="text-sm leading-6 text-muted-foreground">
+          <span className="font-medium text-foreground">When:</span>{" "}
+          {item.criteria}
+        </p>
+        <p className="text-sm leading-6 text-muted-foreground">
+          <span className="font-medium text-foreground">Why:</span> {item.why}
+        </p>
+        <p className="text-sm leading-6 text-muted-foreground">
+          <span className="font-medium text-foreground">Tradeoff:</span>{" "}
+          {item.tradeoff}
+        </p>
+      </div>
+      {item.model.includes(",") && (
+        <p className="mt-2 font-mono text-xs leading-5 text-muted-foreground/60">
+          {item.model}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function TechChoiceCard({ item }: { item: TechChoice }) {
+  return (
+    <article className="rounded-lg border border-border/60 bg-card/50 p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">{item.technology}</h3>
+        <span className="text-xs text-muted-foreground">{item.role}</span>
+      </div>
+      <div className="grid gap-3 text-sm leading-6 md:grid-cols-2">
+        <div>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary">
+            Why chosen
           </p>
-          <p className="text-sm leading-6 text-muted-foreground">{item.role}</p>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Tradeoff: {item.tradeoff}
+          <p className="text-muted-foreground">{item.why}</p>
+        </div>
+        <div>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Alternative: {item.alternative}
           </p>
+          <p className="text-muted-foreground">{item.whyNot}</p>
         </div>
       </div>
     </article>
   );
 }
 
-function DeltaCard({ item }: { item: PolarisDelta }) {
-  return (
-    <article className="rounded-lg border border-border/60 bg-card/50 p-4">
-      <h3 className="text-sm font-semibold text-primary">{item.label}</h3>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        <span className="font-medium text-foreground">Curate:</span>{" "}
-        {item.current}
-      </p>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        <span className="font-medium text-foreground">Polaris:</span>{" "}
-        {item.reference}
-      </p>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        <span className="font-medium text-foreground">Lesson:</span>{" "}
-        {item.lesson}
-      </p>
-    </article>
-  );
-}
-
-function Pair({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="text-muted-foreground">{value}</dd>
-    </div>
-  );
-}
-
-function LessonRow({
-  lesson,
-  note,
-  evidence,
+function ReliabilityRow({
+  item,
 }: {
-  lesson: string;
-  note: string;
-  evidence: string;
+  item: (typeof reliabilityLessons)[number];
 }) {
   return (
     <article className="rounded-lg border border-border/60 bg-card/50 p-4">
       <div className="flex items-start gap-3">
-        <Wrench className="mt-0.5 size-4 shrink-0 text-primary" />
+        <div className="mt-0.5 text-primary">{item.icon}</div>
         <div>
-          <h3 className="text-sm font-semibold">{lesson}</h3>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">{note}</p>
+          <h3 className="text-sm font-semibold">{item.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {item.detail}
+          </p>
           <p className="mt-2 rounded-md bg-background/70 px-2 py-1 font-mono text-xs leading-5 text-muted-foreground">
-            {evidence}
+            {item.evidence}
           </p>
         </div>
       </div>
     </article>
+  );
+}
+
+function PitfallCard({ item }: { item: Pitfall }) {
+  return (
+    <article className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-5">
+      <div className="mb-3 flex items-center gap-2">
+        <AlertTriangle className="size-4 text-yellow-500" />
+        <h3 className="text-sm font-semibold">{item.title}</h3>
+      </div>
+      <dl className="space-y-2 text-sm leading-6">
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wider text-yellow-600 dark:text-yellow-400">
+            Symptom
+          </dt>
+          <dd className="text-muted-foreground">{item.symptom}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Cause
+          </dt>
+          <dd className="text-muted-foreground">{item.cause}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Fix
+          </dt>
+          <dd className="text-muted-foreground">{item.fix}</dd>
+        </div>
+        <div>
+          <dd className="rounded-md bg-background/70 px-2 py-1 font-mono text-xs leading-5 text-muted-foreground">
+            {item.evidence}
+          </dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function MaintenanceRow({ item }: { item: MaintenanceNote }) {
+  return (
+    <article className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
+      <div className="flex items-start gap-3">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-red-500" />
+        <div>
+          <h3 className="text-sm font-semibold">{item.area}</h3>
+          <p className="mt-1 text-sm font-medium leading-6 text-red-600 dark:text-red-400">
+            {item.warning}
+          </p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {item.context}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FutureRow({ item }: { item: (typeof futureImprovements)[number] }) {
+  return (
+    <article className="flex gap-3 rounded-lg border border-border/60 bg-card/50 p-4">
+      <ChevronRight className="mt-0.5 size-4 shrink-0 text-primary" />
+      <div>
+        <h3 className="text-sm font-semibold">{item.area}</h3>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          {item.detail}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function Pair({
+  label,
+  value,
+  variant,
+}: {
+  label: string;
+  value: string;
+  variant?: "warning";
+}) {
+  return (
+    <div>
+      <dt
+        className={`mb-1 text-xs font-semibold uppercase tracking-wider ${
+          variant === "warning"
+            ? "text-yellow-600 dark:text-yellow-400"
+            : "text-muted-foreground"
+        }`}
+      >
+        {label}
+      </dt>
+      <dd className="text-muted-foreground">{value}</dd>
+    </div>
   );
 }
