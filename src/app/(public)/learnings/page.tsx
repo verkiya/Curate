@@ -97,8 +97,7 @@ const architectureDecisions: Decision[] = [
     why: "SharedArrayBuffer constraints and browser memory limits make multiple containers unstable. An orphaned instance from premature teardown causes unrecoverable boot failures.",
     tradeoff:
       "The preview is a local sandbox, not a general VM. SSR frameworks, native modules, non-JS runtimes, and interactive terminal prompts are all unsupported.",
-    evidence:
-      "src/features/preview/hooks/use-webcontainer.ts, next.config.ts",
+    evidence: "src/features/preview/hooks/use-webcontainer.ts, next.config.ts",
     icon: <Wrench className="size-4" />,
   },
   {
@@ -119,8 +118,7 @@ const architectureDecisions: Decision[] = [
     why: "Claude often guesses file paths instead of using Convex IDs. Returning a tool error string lets the agent self-correct in the next iteration rather than crashing the Inngest function.",
     tradeoff:
       "Errors become conversational artifacts in the context window, consuming tokens. Critical failures still need external monitoring. No structured error classes for post-mortem analysis.",
-    evidence:
-      "src/inngest/tools/read-file.ts, update-file.ts, delete-files.ts",
+    evidence: "src/inngest/tools/read-file.ts, update-file.ts, delete-files.ts",
     icon: <ShieldCheck className="size-4" />,
   },
   {
@@ -189,7 +187,8 @@ const modelDecisions: Decision[] = [
 const modelRoutes: ModelRoute[] = [
   {
     route: "Suggestion primary",
-    model: "gemini-3.5-flash, gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite",
+    model:
+      "gemini-3.5-flash, gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite",
     criteria: "Convex reservation (weighted random)",
     why: "Highest RPM capacity for high-frequency autocomplete",
     tradeoff: "Prompt must stay schema-bound. No deep reasoning.",
@@ -220,7 +219,8 @@ const modelRoutes: ModelRoute[] = [
     model: "claude-opus-4-8",
     criteria: "None (configured, not routed)",
     why: "Future deep reasoning escalation tier.",
-    tradeoff: "Needs deliberate route, trigger, and budget guardrails before activation.",
+    tradeoff:
+      "Needs deliberate route, trigger, and budget guardrails before activation.",
   },
 ];
 
@@ -232,35 +232,40 @@ const techChoices: TechChoice[] = [
     role: "Real-time database, file storage, auth, AI quota management",
     why: "Reactive queries auto-update the UI. Built-in binary storage. Mutations work as distributed locks (rate limiting). Typed schemas with validation.",
     alternative: "Supabase / PlanetScale + S3",
-    whyNot: "Would need a separate real-time layer (Pusher/Ably), separate blob storage, and manual type generation. More moving parts for the same result.",
+    whyNot:
+      "Would need a separate real-time layer (Pusher/Ably), separate blob storage, and manual type generation. More moving parts for the same result.",
   },
   {
     technology: "Inngest",
     role: "Durable background workflows (AI agent, GitHub sync)",
     why: "Event-driven. Survives serverless timeouts. Built-in cancelOn, onFailure, step-based orchestration. Works with AgentKit for AI agent loops.",
     alternative: "Temporal / BullMQ / Trigger.dev",
-    whyNot: "Temporal is heavy for this scale. BullMQ needs Redis infra. Trigger.dev doesn't integrate with AgentKit. Inngest's model fits serverless deployments on Vercel.",
+    whyNot:
+      "Temporal is heavy for this scale. BullMQ needs Redis infra. Trigger.dev doesn't integrate with AgentKit. Inngest's model fits serverless deployments on Vercel.",
   },
   {
     technology: "WebContainers",
     role: "Browser-local Node.js runtime for live preview",
     why: "Zero-install, zero-infra. Users get a real dev server without any backend sandbox. Secure by default (WASM sandbox, no host access).",
     alternative: "CodeSandbox API / Stackblitz SDK / VM-based sandbox",
-    whyNot: "External sandboxes add network latency, need paid APIs, and can't do instant file sync. VM sandboxes require server infra.",
+    whyNot:
+      "External sandboxes add network latency, need paid APIs, and can't do instant file sync. VM sandboxes require server infra.",
   },
   {
     technology: "CodeMirror 6",
     role: "Code editor with custom extensions",
     why: "Extension architecture allows ghost text, quick edit popover, and custom themes as first-class features. No wrapper library needed.",
     alternative: "Monaco Editor",
-    whyNot: "Monaco bundles VS Code's entire editor. Harder to customize at the extension level. CodeMirror's lighter model fits better in a browser IDE.",
+    whyNot:
+      "Monaco bundles VS Code's entire editor. Harder to customize at the extension level. CodeMirror's lighter model fits better in a browser IDE.",
   },
   {
     technology: "Clerk",
     role: "Authentication (OAuth, session management)",
     why: "Handles OAuth providers, session tokens, and integrates directly with both Next.js middleware and Convex identity verification.",
     alternative: "NextAuth / Auth0",
-    whyNot: "Clerk's Convex integration is native. NextAuth would need a custom adapter. Auth0 is more complex to set up.",
+    whyNot:
+      "Clerk's Convex integration is native. NextAuth would need a custom adapter. Auth0 is more complex to set up.",
   },
 ];
 
@@ -286,8 +291,7 @@ const reliabilityLessons = [
     title: "Keep preview lifecycle idempotent",
     detail:
       "Boot waits for cleanup. Teardown waits for boot. Import pauses startup. File sync runs regardless of container status (not gated on 'running'). Terminal output appends only new bytes.",
-    evidence:
-      "use-webcontainer.ts, preview-terminal.tsx",
+    evidence: "use-webcontainer.ts, preview-terminal.tsx",
     icon: <RefreshCcw className="size-4" />,
   },
   {
@@ -324,30 +328,34 @@ const reliabilityLessons = [
 
 const pitfalls: Pitfall[] = [
   {
-    title: "\"Only a single WebContainer instance\" crash",
+    title: '"Only a single WebContainer instance" crash',
     symptom: "Preview fails to boot after navigation or hot reload.",
-    cause: "Previous instance wasn't torn down before new boot. Can happen if teardown is called during pending boot without awaiting it.",
+    cause:
+      "Previous instance wasn't torn down before new boot. Can happen if teardown is called during pending boot without awaiting it.",
     fix: "The cleanupPromise pattern handles this. If the error still occurs, the restart button falls back to window.location.reload().",
     evidence: "use-webcontainer.ts (teardownWebContainer, restart callback)",
   },
   {
     title: "Agent passes file paths instead of Convex IDs",
     symptom: "Tool calls fail with ArgumentValidationError.",
-    cause: "Claude guesses paths like 'src/App.jsx' instead of calling listFiles first to get the actual Convex document ID.",
+    cause:
+      "Claude guesses paths like 'src/App.jsx' instead of calling listFiles first to get the actual Convex document ID.",
     fix: "Tools return an instructional error string telling the agent to call listFiles. The system prompt rule explicitly says: 'NEVER use file paths as IDs.'",
     evidence: "process-message.ts (system prompt), read-file.ts",
   },
   {
     title: "Suggestion quota exhaustion cascade",
     symptom: "Ghost text stops appearing for all users.",
-    cause: "All 5 Gemini models hit their 95% safety margin within the same 60-second window.",
+    cause:
+      "All 5 Gemini models hit their 95% safety margin within the same 60-second window.",
     fix: "The API route catches the Convex error and falls back to Claude Haiku. If Haiku also 429s, returns empty string with 429 status.",
     evidence: "suggestion/route.ts (triple error handling)",
   },
   {
     title: "GitHub import silently skips files",
     symptom: "Imported project is missing some files.",
-    cause: "Individual file fetches in the import loop catch and log errors but continue. No user-facing report of skipped files.",
+    cause:
+      "Individual file fetches in the import loop catch and log errors but continue. No user-facing report of skipped files.",
     fix: "Known limitation. The error is logged server-side. Surfacing a per-file skip report to the user is a roadmap item.",
     evidence: "import-github-repo.ts (catch block in create-files step)",
   },
@@ -485,7 +493,7 @@ const futureImprovements = [
 
 export default function LearningsPage() {
   return (
-    <main className="min-h-screen bg-background pb-28 text-foreground md:pb-32">
+    <main className="cursor-logo min-h-screen bg-background pb-28 text-foreground md:pb-32">
       {/* ── Hero ── */}
       <div className="border-b border-border/60 bg-card/20">
         <div className="mx-auto max-w-5xl px-6 py-14 lg:px-10">

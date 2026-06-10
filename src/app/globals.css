@@ -302,3 +302,6 @@ html {
     opacity: 1;
   }
 }
+.cursor-logo {
+  cursor: url("/cursor.png") 16 16, auto;
+}

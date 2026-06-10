@@ -121,7 +121,7 @@ const features = [
 
 export const UnauthenticatedView = () => {
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-sidebar overflow-hidden py-16">
+    <div className="cursor-logo relative flex items-center justify-center min-h-screen bg-sidebar overflow-hidden py-16">
       {/* Code streams background */}
       <div className="absolute inset-0 pointer-events-none hidden sm:block">
         {streams.map((s, i) => (
