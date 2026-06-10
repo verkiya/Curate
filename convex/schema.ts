@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Represents a user's codebase/workspace.
   projects: defineTable({
     name: v.string(),
     ownerId: v.string(),
@@ -25,11 +26,11 @@ export default defineSchema({
     settings: v.optional(
       v.object({
         installCommand: v.optional(v.string()),
-        devCommand: v.optional(v.string()),
       }),
     ),
   }).index("by_owner_updated", ["ownerId", "updatedAt"]),
 
+  // Represents the recursive file system tree. Both files and folders are nodes.
   files: defineTable({
     projectId: v.id("projects"),
     parentId: v.optional(v.id("files")),
@@ -43,11 +44,15 @@ export default defineSchema({
     .index("by_parent", ["parentId"])
     .index("by_project_parent", ["projectId", "parentId"])
     .index("by_project_updated", ["projectId", "updatedAt"]),
+
+  // Groups AI messages together for a specific project.
   conversations: defineTable({
     projectId: v.id("projects"),
     title: v.string(),
     updatedAt: v.number(),
   }).index("by_project", ["projectId"]),
+
+  // Individual AI or User messages.
   messages: defineTable({
     conversationId: v.id("conversations"),
     projectId: v.id("projects"),
@@ -63,6 +68,9 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_project_status", ["projectId", "status"]),
+
+  // Curate-specific: Distributed rate limiting counters for Gemini AI suggestion models.
+  // This enables cross-session usage tracking to stay within free-tier limits.
   aiUsage: defineTable({
     modelName: v.string(),
     requests: v.number(),

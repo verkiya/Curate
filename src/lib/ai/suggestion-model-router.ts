@@ -1,7 +1,7 @@
 // lib/ai/suggestion-model-router.ts
-//
-// Weighted round-robin router for Gemini suggestion models.
-// Tracks per-minute usage in-process and enforces a 60 % safety margin
+// [DEPRECATED] - In-memory router.
+// Curate has migrated to a distributed, Convex-based rate limiter (convex/GeminiAi.ts).
+// This file is kept for historical reference on how to do in-process weighted round-robin.
 // so the API is never hit harder than necessary.
 //
 // ⚠️  Single-process only.  If you scale to multiple server instances,

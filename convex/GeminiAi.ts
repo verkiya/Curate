@@ -1,6 +1,8 @@
 import { mutation } from "./_generated/server";
 
 import { GEMINI_MODELS } from "../src/lib/ai-models";
+// We use a 95% safety factor for rate limits because multiple users might be typing simultaneously,
+// and we want to leave a small buffer before we hard-fallback to Anthropic.
 const SAFETY_FACTOR = 0.95;
 
 export const reserveSuggestionModel = mutation({
@@ -59,7 +61,9 @@ export const reserveSuggestionModel = mutation({
       }
     }
 
-    // Since we're in Convex, we can just randomly pick from the pool instead of round-robin
+    // Since we're in Convex, we can just randomly pick from the pool instead of round-robin.
+    // A round-robin counter would require a dedicated Convex row that gets updated on EVERY keystroke,
+    // which would cause massive write contention. Random selection is statistically identical over time.
     const selected =
       weightedPool[Math.floor(Math.random() * weightedPool.length)];
 

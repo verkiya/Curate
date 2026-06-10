@@ -40,6 +40,8 @@ export const createReadFilesTool = ({ internalKey }: ReadFilesToolOptions) => {
                 fileId: fileId as Id<"files">,
               });
             } catch (error) {
+              // Catching ArgumentValidationError when the agent hallucinates file paths instead of Convex IDs.
+              // Directs the agent to use listFiles instead of failing the background job.
               if (
                 error instanceof Error &&
                 error.message.includes("ArgumentValidationError")

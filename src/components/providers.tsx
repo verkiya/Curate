@@ -19,6 +19,10 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  // Public Route Bypass Pattern:
+  // We check the pathname before rendering the Auth providers.
+  // This allows public pages (like /learnings) to render immediately server-side
+  // without triggering the <AuthLoading> flash or redirecting to the <UnauthenticatedView>.
   const isPublicRoute = ["/learnings", "/test"].some(
     (prefix) => pathname === prefix || pathname?.startsWith(`${prefix}/`),
   );

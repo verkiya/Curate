@@ -32,10 +32,13 @@ export const processMessage = inngest.createFunction(
     cancelOn: [
       {
         event: "message/cancel",
-        if: "event.data.messageId == async.data.messageId", // Event refers to the incoming message event and async refers to the original message event that triggered the function
+        // The event refers to the incoming cancel event, async refers to the original message event that triggered this function.
+        // This pattern allows us to cleanly terminate background AI processing if the user cancels or the connection drops.
+        if: "event.data.messageId == async.data.messageId",
       },
     ],
     onFailure: async ({ event, step }) => {
+      // Inngest unwraps the failed event payload, so the original data is nested under event.data.event.data
       const { messageId } = event.data.event.data as MessageEvent;
       const internalKey = process.env.CURATE_CONVEX_INTERNAL_KEY;
       if (internalKey) {
@@ -61,6 +64,8 @@ export const processMessage = inngest.createFunction(
       );
     }
 
+    // Wait briefly to allow Convex mutations (like the initial message insert) to propagate to the read replicas.
+    // This handles the eventual consistency gap when reading the conversation immediately after insertion.
     await step.sleep("wait-for-db-sync", "1s");
 
     const conversation = await step.run("get-conversation", async () => {
@@ -156,7 +161,9 @@ export const processMessage = inngest.createFunction(
     const network = createNetwork({
       name: "curate-network",
       agents: [codingAgent],
-      maxIter: 5, // Can tweak the iterations depending on the budget
+      // maxIter is reduced to 5 to avoid runaway token usage and infinite loops.
+      // 5 is sufficient for most multi-step codebase modifications.
+      maxIter: 5,
       router: ({ network }) => {
         const lastResult = network.state.results.at(-1);
         const hasTextResponse = lastResult?.output.some(
@@ -165,12 +172,12 @@ export const processMessage = inngest.createFunction(
         const hasToolCalls = lastResult?.output.some(
           (m) => m.type === "tool_call",
         );
-        // Anthropic outputs text and tool calls together
-        // Only stop if there's text without tool calls (final response)
+        // Anthropic Claude differs from other models by frequently outputting text and tool calls simultaneously.
+        // We only want to stop routing back to the coding agent if there is a final text response and NO tool calls pending.
         if (hasTextResponse && !hasToolCalls) {
-          return undefined;
+          return undefined; // Stop network execution
         }
-        return codingAgent;
+        return codingAgent; // Continue routing back to the same agent
       },
     });
     //Running the agent
