@@ -88,7 +88,7 @@ export const ImportGithubDialog = ({
           const body = await error.response.json<{ error: string }>();
 
           if (body.error?.includes("Pro plan required")) {
-            toast.error("Upgrade to import repositories", {
+            toast.info("Upgrade to import repositories", {
               action: {
                 label: "Upgrade",
                 onClick: () => openUserProfile(),

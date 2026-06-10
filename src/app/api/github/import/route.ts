@@ -34,8 +34,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { url } = requestSchema.parse(body);
   const { owner, repo } = parseGithubUrl(url);
-  //https://github.com/hiverkiya/curate
-  // becomes {owner:"hiverkiya", repo:"curate"}
+  //https://github.com/verkiya/curate
+  // becomes {owner:"verkiya", repo:"curate"}
   const client = await clerkClient();
   const tokens = await client.users.getUserOauthAccessToken(userId, "github");
   const githubToken = tokens.data[0]?.token;

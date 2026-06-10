@@ -277,10 +277,7 @@ function BootAnimation() {
       {/* Progress bars */}
       <div className="w-80 space-y-2">
         {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-1 overflow-hidden rounded-full bg-muted"
-          >
+          <div key={i} className="h-1 overflow-hidden rounded-full bg-muted">
             <motion.div
               className="h-full bg-primary"
               animate={{
