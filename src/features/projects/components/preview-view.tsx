@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Allotment } from "allotment";
 import {
   Loader2Icon,
