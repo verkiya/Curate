@@ -1,4 +1,4 @@
-import { CopyIcon, HistoryIcon, LoaderIcon, PlusIcon } from "lucide-react";
+import { CopyIcon, HistoryIcon, PlusIcon } from "lucide-react";
 import ky from "ky";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";

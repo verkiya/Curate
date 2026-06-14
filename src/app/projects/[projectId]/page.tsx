@@ -2,14 +2,12 @@
 // Next expects URL params to be strings. To avoid the Next validator error,
 // uncomment the alternative implementation below which accepts `projectId` as
 // `string` and casts it to `Id<"projects">` at runtime.
-import type { Metadata } from "next";
-import { auth } from "@clerk/nextjs/server";
-import { fetchQuery } from "convex/nextjs";
+
 
 import { ProjectIdView } from "@/features/projects/components/project-id-view";
 
 import { Id } from "../../../../convex/_generated/dataModel";
-import { api } from "../../../../convex/_generated/api";
+
 
 // export async function generateMetadata({
 //   params,

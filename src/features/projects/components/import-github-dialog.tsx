@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useClerk } from "@clerk/nextjs";
-import { GithubIcon, Loader2Icon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,6 @@ import {
   Field,
   FieldError,
   FieldLabel,
-  FieldDescription,
 } from "@/components/ui/field";
 
 import { Id } from "../../../../convex/_generated/dataModel";
