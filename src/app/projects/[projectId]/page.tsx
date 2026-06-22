@@ -3,11 +3,9 @@
 // uncomment the alternative implementation below which accepts `projectId` as
 // `string` and casts it to `Id<"projects">` at runtime.
 
-
 import { ProjectIdView } from "@/features/projects/components/project-id-view";
 
 import { Id } from "../../../../convex/_generated/dataModel";
-
 
 // export async function generateMetadata({
 //   params,

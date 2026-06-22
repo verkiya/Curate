@@ -8,6 +8,9 @@ interface TabState {
   previewTabId: Id<"files"> | null;
 }
 
+// Editor tabs are intentionally session-local.
+// Convex owns durable file contents; Zustand owns IDE chrome that should reset cleanly
+// when a project is reopened or the browser refreshes.
 const defaultTabState: TabState = {
   openTabs: [],
   activeTabId: null,

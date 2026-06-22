@@ -72,7 +72,7 @@ const architectureDecisions: Decision[] = [
     title: "State is split by lifecycle",
     decision:
       "Convex owns durable state (projects, files, messages, binary storage, AI quotas). Zustand owns ephemeral state (tabs, active file, layout). CodeMirror owns transient keystroke-level state.",
-    why: "Durable project data, local IDE UX, and transient editor transactions have vastly different lifecycles. Putting keystrokes in a database adds 50ms+ round-trip latency. Putting files in memory loses data on tab close.",
+    why: "Durable project data, local IDE UX, and transient editor transactions have vastly different lifecycles. Keystrokes cannot wait on backend round trips. Files cannot live only in memory.",
     tradeoff:
       "No dirty-buffer conflict model. Autosave is a 300ms debounce to Convex. Two users editing the same file would overwrite each other.",
     evidence:
@@ -104,7 +104,7 @@ const architectureDecisions: Decision[] = [
     title: "Suggestions are editor extensions, not chat",
     decision:
       "Ghost text lives inside CodeMirror as a ViewPlugin, fires only on docChanged (actual typing), aborts stale requests, and accepts with Tab.",
-    why: "Autocomplete should feel like editor infrastructure with zero-lag, not a conversational request loop. Triggering on cursor movement would burn API quota on every arrow key press.",
+    why: "Autocomplete should feel like editor infrastructure, not a conversational request loop. Triggering on cursor movement would burn API quota on every arrow key press.",
     tradeoff:
       "Suggestions are intentionally narrow (single insertion point) and cannot do multi-file reasoning. The 500ms debounce trades immediate response for quota efficiency.",
     evidence:
@@ -141,7 +141,7 @@ const modelDecisions: Decision[] = [
     title: "Suggestions use a distributed Gemini pool",
     decision:
       "Ghost text reserves a Gemini Flash model through a Convex mutation before each request. Five models with different RPM limits and weights form a pool. Selection is weighted random.",
-    why: "Autocomplete is extremely high-frequency and latency-sensitive. The Gemini free tier provides enough RPM if distributed across models. Random selection avoids the massive write contention a round-robin counter would cause.",
+    why: "Autocomplete is extremely high-frequency and latency-sensitive. The configured Gemini pool spreads requests across models with separate RPM limits. Random selection avoids the write contention a round-robin counter would cause.",
     tradeoff:
       "The 95% safety margin is conservative. The prompt must stay narrow and schema-bound (Zod). Parsing failures silently return empty strings, protecting typing flow but hiding failures.",
     evidence:
@@ -190,14 +190,14 @@ const modelRoutes: ModelRoute[] = [
     model:
       "gemini-3.5-flash, gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite",
     criteria: "Convex reservation (weighted random)",
-    why: "Highest RPM capacity for high-frequency autocomplete",
+    why: "Configured for high request capacity across the suggestion pool",
     tradeoff: "Prompt must stay schema-bound. No deep reasoning.",
   },
   {
     route: "Suggestion fallback",
     model: "claude-haiku-4-5-20251001",
     criteria: "All Gemini quotas exhausted (95% safety margin)",
-    why: "Different provider = independent quota. Suggestions never silently stop.",
+    why: "Different provider = independent quota before the UI reports exhaustion.",
     tradeoff: "More expensive per-request than Gemini. Should be rare.",
   },
   {
@@ -233,7 +233,7 @@ const techChoices: TechChoice[] = [
     why: "Reactive queries auto-update the UI. Built-in binary storage. Mutations work as distributed locks (rate limiting). Typed schemas with validation.",
     alternative: "Supabase / PlanetScale + S3",
     whyNot:
-      "Would need a separate real-time layer (Pusher/Ably), separate blob storage, and manual type generation. More moving parts for the same result.",
+      "Would require rebuilding the real-time query layer, binary storage boundary, and generated type workflow that Convex currently provides in one system.",
   },
   {
     technology: "Inngest",
@@ -241,7 +241,7 @@ const techChoices: TechChoice[] = [
     why: "Event-driven. Survives serverless timeouts. Built-in cancelOn, onFailure, step-based orchestration. Works with AgentKit for AI agent loops.",
     alternative: "Temporal / BullMQ / Trigger.dev",
     whyNot:
-      "Temporal is heavy for this scale. BullMQ needs Redis infra. Trigger.dev doesn't integrate with AgentKit. Inngest's model fits serverless deployments on Vercel.",
+      "Would require rewriting the current event names, cancelOn behavior, onFailure hooks, and AgentKit workflow integration already built around Inngest.",
   },
   {
     technology: "WebContainers",
@@ -249,7 +249,7 @@ const techChoices: TechChoice[] = [
     why: "Zero-install, zero-infra. Users get a real dev server without any backend sandbox. Secure by default (WASM sandbox, no host access).",
     alternative: "CodeSandbox API / Stackblitz SDK / VM-based sandbox",
     whyNot:
-      "External sandboxes add network latency, need paid APIs, and can't do instant file sync. VM sandboxes require server infra.",
+      "Would move preview execution out of Curate's browser-local lifecycle and require a different file-sync, security, and provisioning model.",
   },
   {
     technology: "CodeMirror 6",
@@ -257,7 +257,7 @@ const techChoices: TechChoice[] = [
     why: "Extension architecture allows ghost text, quick edit popover, and custom themes as first-class features. No wrapper library needed.",
     alternative: "Monaco Editor",
     whyNot:
-      "Monaco bundles VS Code's entire editor. Harder to customize at the extension level. CodeMirror's lighter model fits better in a browser IDE.",
+      "The current ghost text, quick edit, selection tooltip, minimap, and theme work are implemented as CodeMirror extensions; switching would be a rewrite.",
   },
   {
     technology: "Clerk",
@@ -265,7 +265,7 @@ const techChoices: TechChoice[] = [
     why: "Handles OAuth providers, session tokens, and integrates directly with both Next.js middleware and Convex identity verification.",
     alternative: "NextAuth / Auth0",
     whyNot:
-      "Clerk's Convex integration is native. NextAuth would need a custom adapter. Auth0 is more complex to set up.",
+      "The current auth boundary depends on Clerk middleware, Clerk OAuth tokens, and Convex identity verification; replacing it would affect every protected route and GitHub workflow.",
   },
 ];
 
@@ -397,7 +397,7 @@ const maintenanceNotes: MaintenanceNote[] = [
     warning:
       "Do not replace Math.random() with a counter-based round-robin. A counter would require a dedicated Convex row updated on every keystroke across all users.",
     context:
-      "The comment in the code explains: random selection is statistically identical to round-robin over time, with zero write contention.",
+      "The comment in the code explains why a shared round-robin counter would add write contention on every keystroke. Weighted random selection avoids that shared counter.",
   },
   {
     area: "System prompt XML structure",
@@ -418,7 +418,7 @@ const maintenanceNotes: MaintenanceNote[] = [
     warning:
       "Do not move open tabs or cursor position state into Convex. Do not move durable file data into Zustand.",
     context:
-      "Convex latency (50ms+) is too slow for transient editor state. Zustand is wiped on refresh, which is fatal for project files.",
+      "Backend round trips are too slow for transient editor state. Zustand is wiped on refresh, which is fatal for project files.",
   },
   {
     area: "docChanged-only suggestion triggering",
@@ -446,7 +446,7 @@ const maintenanceNotes: MaintenanceNote[] = [
     warning:
       "Do not remove or arbitrarily increase the 'maxIter: 5' limit in the Inngest process-message workflow.",
     context:
-      "Unbounded tool-calling loops can consume massive token budgets in minutes. 5 is proven sufficient for the current toolset.",
+      "Unbounded tool-calling loops can consume large token budgets quickly. The current implementation treats 5 iterations as the intended cap for this toolset.",
   },
   {
     area: "Gemini safety margin logic",

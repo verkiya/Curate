@@ -9,6 +9,8 @@ export const CLAUDE_MODELS = {
   sonnet: "claude-sonnet-4-6",
 
   // Deep reasoning, architecture, extremely complex tasks
+  // Defined as inventory, not an active route. Wire Opus through an explicit escalation path
+  // before using it so cost, latency, and cancellation behavior stay intentional.
   opus: "claude-opus-4-8",
 } as const;
 
