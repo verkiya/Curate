@@ -43,15 +43,15 @@ Curate is a full-featured browser IDE that combines a real code editor, AI codin
 
 ## ✨ Core Capabilities
 
-| Capability | What it does | How it works |
-| :--- | :--- | :--- |
-| 💻 **Code Editor** | Full CodeMirror 6 workspace with tabs, minimap, syntax highlighting | Custom extensions for ghost text, selection editing, indentation markers |
-| 👻 **AI Ghost Text** | Real-time inline autocomplete as you type | Gemini Flash pool (Convex-reserved) → Claude Haiku fallback, 500ms debounce |
-| 🪄 **AI Quick Edit** | Select code → describe a change → get instant edit | Haiku for <1500 chars, Sonnet for larger selections, with URL context scraping |
-| 🤖 **AI Coding Agent** | Full file-aware agent that creates, reads, updates, deletes files | AgentKit network with 8 tools, Sonnet, maxIter 5, cancellable via events |
-| ⚡ **Live Preview** | Browser-local dev server with integrated terminal | WebContainer singleton with managed lifecycle, auto-install, hot-reload |
-| 📥 **GitHub Import** | Import GitHub repositories | Inngest workflow: fetch tree → sort by depth → create nodes → handle binaries |
-| 📤 **GitHub Export** | Push project back to GitHub as a new repository | Inngest workflow: rebuild paths → create blobs → single commit → update ref |
+| Capability             | What it does                                                        | How it works                                                                   |
+| :--------------------- | :------------------------------------------------------------------ | :----------------------------------------------------------------------------- |
+| 💻 **Code Editor**     | Full CodeMirror 6 workspace with tabs, minimap, syntax highlighting | Custom extensions for ghost text, selection editing, indentation markers       |
+| 👻 **AI Ghost Text**   | Real-time inline autocomplete as you type                           | Gemini Flash pool (Convex-reserved) → Claude Haiku fallback, 500ms debounce    |
+| 🪄 **AI Quick Edit**   | Select code → describe a change → get instant edit                  | Haiku for <1500 chars, Sonnet for larger selections, with URL context scraping |
+| 🤖 **AI Coding Agent** | Full file-aware agent that creates, reads, updates, deletes files   | AgentKit network with 8 tools, Sonnet, maxIter 5, cancellable via events       |
+| ⚡ **Live Preview**    | Browser-local dev server with integrated terminal                   | WebContainer singleton with managed lifecycle, auto-install, hot-reload        |
+| 📥 **GitHub Import**   | Import GitHub repositories                                          | Inngest workflow: fetch tree → sort by depth → create nodes → handle binaries  |
+| 📤 **GitHub Export**   | Push project back to GitHub as a new repository                     | Inngest workflow: rebuild paths → create blobs → single commit → update ref    |
 
 ---
 
@@ -86,13 +86,13 @@ flowchart TD
 
 This is the most important architectural decision in Curate. Different types of state have different lifecycles, persistence requirements, and latency profiles:
 
-| Layer | Owner | Lifecycle | Persistence | Latency |
-| :--- | :--- | :--- | :--- | :--- |
-| **Keystrokes** | CodeMirror | Local browser | None | Must feel immediate |
-| **Editor chrome** | Zustand | Session | In-memory only | Instant |
-| **Project data** | Convex | Permanent | Cloud database | Network round trip |
-| **Background work**| Inngest | Minutes | Durable, survives tab close | Async |
-| **Browser runtime**| WebContainer | Session | Re-mounts from Convex | Multi-step boot |
+| Layer               | Owner        | Lifecycle     | Persistence                 | Latency             |
+| :------------------ | :----------- | :------------ | :-------------------------- | :------------------ |
+| **Keystrokes**      | CodeMirror   | Local browser | None                        | Must feel immediate |
+| **Editor chrome**   | Zustand      | Session       | In-memory only              | Instant             |
+| **Project data**    | Convex       | Permanent     | Cloud database              | Network round trip  |
+| **Background work** | Inngest      | Minutes       | Durable, survives tab close | Async               |
+| **Browser runtime** | WebContainer | Session       | Re-mounts from Convex       | Multi-step boot     |
 
 **Why this matters:** A naive approach would put everything in the database, but autocomplete and cursor interactions cannot wait on backend round trips. Conversely, storing files only in memory loses data on tab close. Each layer handles exactly the state it is suited for.
 
@@ -114,14 +114,14 @@ flowchart TD
     Pool -- "All Exhausted" --> Fallback["Claude Haiku 4.5"]
 ```
 
-| Route | Model | Selection Criteria | Why This Model |
-| :--- | :--- | :--- | :--- |
-| **Ghost text** | Gemini Flash pool | Always first choice | Autocomplete needs high capacity and low latency, not deep reasoning. |
-| **Ghost text fallback**| Claude Haiku 4.5 | Gemini quota exhausted | Gives suggestions a second provider before the UI reports quota exhaustion. |
-| **Small quick edit** | Claude Haiku 4.5 | Selection < 1500 chars | Fast, cheap. Small edits don't need heavy reasoning. |
-| **Large quick edit** | Claude Sonnet 4.6 | Selection ≥ 1500 chars | Larger context needs better code understanding and preservation. |
-| **Coding agent** | Claude Sonnet 4.6 | Always | Best balance of tool use, code quality, and cost. |
-| **Title generation**| Claude Haiku 4.5 | Always | Tiny deterministic task. 50 max tokens, temperature 0. |
+| Route                   | Model             | Selection Criteria     | Why This Model                                                              |
+| :---------------------- | :---------------- | :--------------------- | :-------------------------------------------------------------------------- |
+| **Ghost text**          | Gemini Flash pool | Always first choice    | Autocomplete needs high capacity and low latency, not deep reasoning.       |
+| **Ghost text fallback** | Claude Haiku 4.5  | Gemini quota exhausted | Gives suggestions a second provider before the UI reports quota exhaustion. |
+| **Small quick edit**    | Claude Haiku 4.5  | Selection < 1500 chars | Fast, cheap. Small edits don't need heavy reasoning.                        |
+| **Large quick edit**    | Claude Sonnet 4.6 | Selection ≥ 1500 chars | Larger context needs better code understanding and preservation.            |
+| **Coding agent**        | Claude Sonnet 4.6 | Always                 | Best balance of tool use, code quality, and cost.                           |
+| **Title generation**    | Claude Haiku 4.5  | Always                 | Tiny deterministic task. 50 max tokens, temperature 0.                      |
 
 ### Gemini Quota Management
 
@@ -196,27 +196,27 @@ flowchart TD
 
 ## ⚖️ Key Engineering Decisions
 
-| Technology | Why It Was Chosen | Tradeoffs Accepted |
-| :--- | :--- | :--- |
-| **Convex** | Real-time file sync, durable document storage, binary storage (`_storage`), and cross-session AI quota tracking. | Requires dual auth model (Clerk for users + internal API key for background workers). |
-| **Inngest** | Background work survives tab close, supports cancellation (`cancelOn`), failure recovery, and step-based workflows. | Requires placeholder DB rows and status fields for tracking progress. |
-| **WebContainers** | Zero-install browser Node.js runtime, sandbox isolation, and instant feedback loops. | Singleton constraint per tab. Requires global COEP/COOP headers. No SSR frameworks (Next.js, Nuxt) supported. |
-| **Clerk** | Drop-in OAuth, session management, and identity tokens for Convex validation. | Relies on edge middleware (`proxy.ts`) to protect routes. |
+| Technology        | Why It Was Chosen                                                                                                   | Tradeoffs Accepted                                                                                            |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------ |
+| **Convex**        | Real-time file sync, durable document storage, binary storage (`_storage`), and cross-session AI quota tracking.    | Requires dual auth model (Clerk for users + internal API key for background workers).                         |
+| **Inngest**       | Background work survives tab close, supports cancellation (`cancelOn`), failure recovery, and step-based workflows. | Requires placeholder DB rows and status fields for tracking progress.                                         |
+| **WebContainers** | Zero-install browser Node.js runtime, sandbox isolation, and instant feedback loops.                                | Singleton constraint per tab. Requires global COEP/COOP headers. No SSR frameworks (Next.js, Nuxt) supported. |
+| **Clerk**         | Drop-in OAuth, session management, and identity tokens for Convex validation.                                       | Relies on edge middleware (`proxy.ts`) to protect routes.                                                     |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 16.2 (Turbopack) |
-| **Language** | TypeScript 5.x |
-| **Database** | Convex 1.41 |
-| **Background Jobs** | Inngest 3.54 + AgentKit 0.13 |
-| **AI SDKs** | `@ai-sdk/anthropic`, `@ai-sdk/google` |
-| **Editor** | CodeMirror 6 |
-| **Preview** | WebContainer API 1.6 + xterm.js |
-| **UI** | Radix UI + Tailwind CSS 4 + Framer Motion |
+| Category            | Technology                                |
+| :------------------ | :---------------------------------------- |
+| **Framework**       | Next.js 16.2 (Turbopack)                  |
+| **Language**        | TypeScript 5.x                            |
+| **Database**        | Convex 1.41                               |
+| **Background Jobs** | Inngest 3.54 + AgentKit 0.13              |
+| **AI SDKs**         | `@ai-sdk/anthropic`, `@ai-sdk/google`     |
+| **Editor**          | CodeMirror 6                              |
+| **Preview**         | WebContainer API 1.6 + xterm.js           |
+| **UI**              | Radix UI + Tailwind CSS 4 + Framer Motion |
 
 ---
 
@@ -239,6 +239,7 @@ curate/
 ## 💻 Local Development
 
 ### Prerequisites
+
 - Node.js 20+
 - [Convex](https://convex.dev) account & [Clerk](https://clerk.com) application
 - API Keys for Anthropic & Google AI
@@ -253,17 +254,17 @@ npm install
 
 Create a `.env.local` file with the required variables:
 
-| Variable | Required | Purpose |
-| :--- | :--- | :--- |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk frontend auth |
-| `CLERK_SECRET_KEY` | ✅ | Clerk server auth |
-| `NEXT_PUBLIC_CONVEX_URL` | ✅ | Convex deployment URL |
-| `CONVEX_DEPLOYMENT` | ✅ | Convex deployment identifier |
-| `CURATE_CONVEX_INTERNAL_KEY` | ✅ | Shared secret for Inngest → Convex |
-| `ANTHROPIC_API_KEY` | ✅ | Claude models (agent, edits, titles) |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | ✅ | Gemini models (suggestions) |
-| `FIRECRAWL_API_KEY` | ✅ | URL scraping for quick edit context |
-| `SENTRY_DSN` | — | Error monitoring |
+| Variable                            | Required | Purpose                              |
+| :---------------------------------- | :------- | :----------------------------------- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅       | Clerk frontend auth                  |
+| `CLERK_SECRET_KEY`                  | ✅       | Clerk server auth                    |
+| `NEXT_PUBLIC_CONVEX_URL`            | ✅       | Convex deployment URL                |
+| `CONVEX_DEPLOYMENT`                 | ✅       | Convex deployment identifier         |
+| `CURATE_CONVEX_INTERNAL_KEY`        | ✅       | Shared secret for Inngest → Convex   |
+| `ANTHROPIC_API_KEY`                 | ✅       | Claude models (agent, edits, titles) |
+| `GOOGLE_GENERATIVE_AI_API_KEY`      | ✅       | Gemini models (suggestions)          |
+| `FIRECRAWL_API_KEY`                 | ✅       | URL scraping for quick edit context  |
+| `SENTRY_DSN`                        | —        | Error monitoring                     |
 
 ### Run
 
@@ -277,14 +278,14 @@ This formats the codebase, then concurrently starts the **Next.js** dev server (
 
 ## 🔒 Security Model
 
-| Boundary | Mechanism |
-| :--- | :--- |
-| **User → API routes** | Clerk `auth()` in every route handler |
-| **User → Convex queries** | `verifyAuth()` checks `ctx.auth.getUserIdentity()` |
-| **Inngest → Convex** | `validateInternalKey()` checks `CURATE_CONVEX_INTERNAL_KEY` |
-| **Edge middleware** | `proxy.ts` protects all routes except `/`, `/learnings`, `/test`, `/api/inngest` |
-| **WebContainer** | Sandboxed WASM runtime, no host filesystem access |
-| **COEP/COOP** | Required for SharedArrayBuffer, applied globally via `next.config.ts` |
+| Boundary                  | Mechanism                                                                        |
+| :------------------------ | :------------------------------------------------------------------------------- |
+| **User → API routes**     | Clerk `auth()` in every route handler                                            |
+| **User → Convex queries** | `verifyAuth()` checks `ctx.auth.getUserIdentity()`                               |
+| **Inngest → Convex**      | `validateInternalKey()` checks `CURATE_CONVEX_INTERNAL_KEY`                      |
+| **Edge middleware**       | `proxy.ts` protects all routes except `/`, `/learnings`, `/test`, `/api/inngest` |
+| **WebContainer**          | Sandboxed WASM runtime, no host filesystem access                                |
+| **COEP/COOP**             | Required for SharedArrayBuffer, applied globally via `next.config.ts`            |
 
 > ⚠️ **Important:** `CURATE_CONVEX_INTERNAL_KEY` bypasses all Clerk auth checks. It provides service-to-service authentication for Inngest workers. Treat it as a highly sensitive secret.
 
@@ -294,13 +295,13 @@ This formats the codebase, then concurrently starts the **Next.js** dev server (
 
 Curate is designed as a hosted web app with a browser-local preview runtime:
 
-| Runtime piece | Deployment role |
-| :--- | :--- |
-| **Next.js app** | Serves the dashboard, public pages, API routes, and `/api/inngest` webhook handler. |
-| **Convex** | Stores projects, files, conversations, binary storage IDs, AI usage counters, and backend functions. |
-| **Inngest** | Calls Curate's API handler for durable AI, import, and export workflows. |
-| **Clerk** | Owns user sessions and GitHub OAuth tokens used by import/export routes. |
-| **WebContainer**| Runs user project installs/dev servers locally in the browser; Curate does not run arbitrary project code on its own backend. |
+| Runtime piece    | Deployment role                                                                                                               |
+| :--------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| **Next.js app**  | Serves the dashboard, public pages, API routes, and `/api/inngest` webhook handler.                                           |
+| **Convex**       | Stores projects, files, conversations, binary storage IDs, AI usage counters, and backend functions.                          |
+| **Inngest**      | Calls Curate's API handler for durable AI, import, and export workflows.                                                      |
+| **Clerk**        | Owns user sessions and GitHub OAuth tokens used by import/export routes.                                                      |
+| **WebContainer** | Runs user project installs/dev servers locally in the browser; Curate does not run arbitrary project code on its own backend. |
 
 ---
 
