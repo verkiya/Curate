@@ -32,6 +32,8 @@ export default defineSchema({
   }).index("by_owner_updated", ["ownerId", "updatedAt"]),
 
   // Represents the recursive file system tree. Both files and folders are nodes.
+  // Paths are reconstructed from parentId chains at the integration boundaries
+  // (WebContainer mount and GitHub export) instead of stored as denormalized strings.
   files: defineTable({
     projectId: v.id("projects"),
     parentId: v.optional(v.id("files")),

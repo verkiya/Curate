@@ -18,11 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 import { Id } from "../../../../convex/_generated/dataModel";
 import { FaGithub } from "react-icons/fa";

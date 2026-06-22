@@ -31,7 +31,7 @@ Curate is a full-featured browser IDE that combines a real code editor, AI codin
 | **AI Quick Edit**   | Select code → describe a change → get instant edit                                    | Haiku for <1500 chars, Sonnet for larger selections, with URL context scraping              |
 | **AI Coding Agent** | Full file-aware agent that creates, reads, updates, deletes files                     | AgentKit network with 8 tools, Sonnet, maxIter 5, cancellable via events                    |
 | **Live Preview**    | Browser-local dev server with integrated terminal                                     | WebContainer singleton with managed lifecycle, auto-install, hot-reload                     |
-| **GitHub Import**   | Clone any public/private repo into Curate                                             | Inngest workflow: fetch tree → sort folders by depth → create nodes → handle binaries       |
+| **GitHub Import**   | Import GitHub repositories accessible to the connected account                        | Inngest workflow: fetch tree → sort folders by depth → create nodes → handle binaries       |
 | **GitHub Export**   | Push project back to GitHub as a new repository                                       | Inngest workflow: rebuild paths → create blobs → single commit → update ref                 |
 
 ---
@@ -107,15 +107,15 @@ Curate is a full-featured browser IDE that combines a real code editor, AI codin
 
 This is the most important architectural decision in Curate. Different types of state have different lifecycles, persistence requirements, and latency profiles:
 
-| Layer                      | Owner        | Lifecycle    | Persistence                  | Latency          |
-| -------------------------- | ------------ | ------------ | ---------------------------- | ---------------- |
-| **Keystroke transactions** | CodeMirror   | Microseconds | None                         | Must be zero-lag |
-| **Editor chrome**          | Zustand      | Session      | In-memory only               | Instant          |
-| **Project data**           | Convex       | Permanent    | Cloud database               | ~50ms mutation   |
-| **Background work**        | Inngest      | Minutes      | Durable, survives tab close  | Async            |
-| **Browser runtime**        | WebContainer | Session      | None (re-mounts from Convex) | Boot ~3-5s       |
+| Layer                      | Owner        | Lifecycle                 | Persistence                  | Latency             |
+| -------------------------- | ------------ | ------------------------- | ---------------------------- | ------------------- |
+| **Keystroke transactions** | CodeMirror   | Local browser transaction | None                         | Must feel immediate |
+| **Editor chrome**          | Zustand      | Session                   | In-memory only               | Instant             |
+| **Project data**           | Convex       | Permanent                 | Cloud database               | Network round trip  |
+| **Background work**        | Inngest      | Minutes                   | Durable, survives tab close  | Async               |
+| **Browser runtime**        | WebContainer | Session                   | None (re-mounts from Convex) | Multi-step boot     |
 
-**Why this matters:** A naive approach would put everything in the database. But autocomplete at 50ms round-trip latency is unusable. Conversely, storing files only in-memory loses data on tab close. Each layer handles exactly the state it's suited for.
+**Why this matters:** A naive approach would put everything in the database, but autocomplete and cursor interactions cannot wait on backend round trips. Conversely, storing files only in memory loses data on tab close. Each layer handles exactly the state it is suited for.
 
 ---
 
@@ -150,15 +150,15 @@ User types code ──► docChanged event
                               └────────────────────┘
 ```
 
-| Route                   | Model             | Selection Criteria              | Why This Model                                                                   |
-| ----------------------- | ----------------- | ------------------------------- | -------------------------------------------------------------------------------- |
-| **Ghost text**          | Gemini Flash pool | Always first choice             | Highest RPM capacity. Autocomplete needs volume, not deep reasoning.             |
-| **Ghost text fallback** | Claude Haiku 4.5  | When Gemini 95% quota exhausted | Ensures suggestions never silently stop. Different provider = independent quota. |
-| **Small quick edit**    | Claude Haiku 4.5  | Selection < 1500 chars          | Fast, cheap. Small edits don't need heavy reasoning.                             |
-| **Large quick edit**    | Claude Sonnet 4.6 | Selection ≥ 1500 chars          | Larger context needs better code understanding and preservation.                 |
-| **Coding agent**        | Claude Sonnet 4.6 | Always                          | Best balance of tool use, code quality, and cost.                                |
-| **Title generation**    | Claude Haiku 4.5  | Always                          | Tiny deterministic task. 50 max tokens, temperature 0.                           |
-| **Deep reasoning**      | Claude Opus 4.8   | Reserved, not active            | Configured in `CLAUDE_MODELS` for future escalation. No active route uses it.    |
+| Route                   | Model             | Selection Criteria              | Why This Model                                                                       |
+| ----------------------- | ----------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| **Ghost text**          | Gemini Flash pool | Always first choice             | Configured for high request volume. Autocomplete needs capacity, not deep reasoning. |
+| **Ghost text fallback** | Claude Haiku 4.5  | When Gemini 95% quota exhausted | Gives suggestions a second provider before the UI reports quota exhaustion.          |
+| **Small quick edit**    | Claude Haiku 4.5  | Selection < 1500 chars          | Fast, cheap. Small edits don't need heavy reasoning.                                 |
+| **Large quick edit**    | Claude Sonnet 4.6 | Selection ≥ 1500 chars          | Larger context needs better code understanding and preservation.                     |
+| **Coding agent**        | Claude Sonnet 4.6 | Always                          | Best balance of tool use, code quality, and cost.                                    |
+| **Title generation**    | Claude Haiku 4.5  | Always                          | Tiny deterministic task. 50 max tokens, temperature 0.                               |
+| **Deep reasoning**      | Claude Opus 4.8   | Reserved, not active            | Configured in `CLAUDE_MODELS` for future escalation. No active route uses it.        |
 
 ### Gemini Quota Management
 
@@ -179,7 +179,7 @@ src/app/api/suggestion/route.ts → Triple-layer error handling
 5. On quota exhaustion, the API route falls back to Claude Haiku
 6. Parsing errors (invalid JSON) return empty string — never crash the typing flow
 
-> **Design decision:** Random selection over round-robin. A Convex round-robin counter would require a DB write on every keystroke across all users, causing massive write contention. Random selection is statistically identical over time with zero contention.
+> **Design decision:** Random selection over round-robin. A Convex round-robin counter would require a DB write on every keystroke across all users, causing write contention. Weighted random selection smooths traffic without a shared counter.
 
 ### Agent System
 
@@ -363,7 +363,7 @@ curate/
 │   │   │   ├── messages/      # Agent message dispatch + cancellation
 │   │   │   ├── github/        # GitHub OAuth + import/export triggers
 │   │   │   └── inngest/       # Inngest webhook endpoint
-│   │   ├── dashboard/         # Authenticated IDE workspace
+│   │   ├── projects/          # Authenticated project workspace routes
 │   │   └── (public)/
 │   │       └── learnings/     # Engineering learnings page
 │   │
@@ -463,6 +463,20 @@ This formats the codebase, then concurrently starts:
 | **COEP/COOP**                       | Required for SharedArrayBuffer, applied globally via `next.config.ts`                |
 
 > ⚠️ **Important:** `CURATE_CONVEX_INTERNAL_KEY` bypasses all Clerk auth checks. It provides service-to-service authentication for Inngest workers. Treat it as a highly sensitive secret.
+
+---
+
+## Deployment Architecture
+
+Curate is designed as a hosted web app with a browser-local preview runtime:
+
+| Runtime piece            | Deployment role                                                                                                               |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Next.js app**          | Serves the dashboard, public pages, API routes, and `/api/inngest` webhook handler.                                           |
+| **Convex deployment**    | Stores projects, files, conversations, binary storage IDs, AI usage counters, and backend functions.                          |
+| **Inngest**              | Calls Curate's API handler for durable AI, import, and export workflows.                                                      |
+| **Clerk**                | Owns user sessions and GitHub OAuth tokens used by import/export routes.                                                      |
+| **Browser WebContainer** | Runs user project installs/dev servers locally in the browser; Curate does not run arbitrary project code on its own backend. |
 
 ---
 

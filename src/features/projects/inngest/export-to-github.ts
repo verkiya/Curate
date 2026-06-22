@@ -105,7 +105,9 @@ export const exportToGithub = inngest.createFunction(
       })) as FileWithUrl[];
     });
 
-    // Build a map of file IDs to their full paths
+    // Build a map of file IDs to their full paths.
+    // Curate stores a recursive node graph; GitHub expects path strings inside a tree.
+    // Keep this translation local to export rather than denormalizing paths in Convex.
     const buildFilePaths = (files: FileWithUrl[]) => {
       const fileMap = new Map<Id<"files">, FileWithUrl>();
       files.forEach((f) => fileMap.set(f._id, f));

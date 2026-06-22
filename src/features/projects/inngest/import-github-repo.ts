@@ -177,6 +177,8 @@ export const importGithubRepo = inngest.createFunction(
             });
           }
         } catch {
+          // Import favors partial progress over all-or-nothing failure for individual files.
+          // Keep this visible in docs: users do not yet receive a skipped-file report.
           console.error(`Failed to import file: ${file.path}`);
         }
       }
