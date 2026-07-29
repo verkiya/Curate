@@ -28,7 +28,22 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <ClerkProvider appearance={{ theme: dark }}>
+    <ClerkProvider 
+      appearance={{ 
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "oklch(0.62 0.18 262)",
+          colorBackground: "oklch(0.2 0.012 262)",
+          colorText: "oklch(0.97 0.004 260)",
+          colorDanger: "oklch(0.67 0.22 25)",
+          colorSuccess: "oklch(0.72 0.16 150)",
+          colorInputBackground: "oklch(0.28 0.012 262)",
+          colorInputText: "oklch(0.97 0.004 260)",
+          colorTextOnPrimaryBackground: "oklch(0.985 0 0)",
+          borderRadius: "0.5rem",
+        }
+      }}
+    >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider
           attribute="class"
