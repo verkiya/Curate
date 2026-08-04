@@ -84,20 +84,26 @@ export const ProjectsView = () => {
 
       <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-sidebar p-6 md:p-16">
         <div className="fixed right-4 top-4 z-50 flex items-center gap-4 md:right-6 md:top-6">
-          <Link 
+          <Link
             href="/billing"
             className={cn(
               "hidden sm:flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-all duration-300 ring-1 ring-inset",
-              isPro 
-                ? "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:ring-cyan-500/50 hover:from-blue-500/20 hover:to-cyan-500/20 backdrop-blur-md" 
-                : "bg-background/50 ring-border text-muted-foreground hover:bg-accent hover:text-foreground backdrop-blur-sm"
+              isPro
+                ? "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:ring-cyan-500/50 hover:from-blue-500/20 hover:to-cyan-500/20 backdrop-blur-md"
+                : "bg-background/50 ring-border text-muted-foreground hover:bg-accent hover:text-foreground backdrop-blur-sm",
             )}
           >
-            <CreditCard className={cn("size-4", isPro ? "text-cyan-400" : "opacity-70")} />
-            <span className={cn(
-              "font-medium",
-              isPro ? "font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" : ""
-            )}>
+            <CreditCard
+              className={cn("size-4", isPro ? "text-cyan-400" : "opacity-70")}
+            />
+            <span
+              className={cn(
+                "font-medium",
+                isPro
+                  ? "font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300"
+                  : "",
+              )}
+            >
               {isPro ? "Curate Pro" : "Curate Free"}
             </span>
           </Link>
