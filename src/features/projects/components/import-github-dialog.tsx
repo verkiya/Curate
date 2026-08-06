@@ -86,7 +86,7 @@ export const ImportGithubDialog = ({
             toast.info("Upgrade to import repositories", {
               action: {
                 label: "Upgrade",
-                onClick: () => openUserProfile(),
+                onClick: () => router.push("/billing"),
               },
             });
 

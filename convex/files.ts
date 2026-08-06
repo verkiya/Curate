@@ -85,8 +85,7 @@ export const getFilePath = query({
 
     while (currentId) {
       const file = (await ctx.db.get("files", currentId)) as
-        | Doc<"files">
-        | undefined;
+        Doc<"files"> | undefined;
       if (!file) break;
 
       path.unshift({ _id: file._id, name: file.name });

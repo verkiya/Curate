@@ -1,0 +1,30 @@
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "price": "$0",
+      "interval": "month",
+      "features": [
+        "Up to 3 active projects",
+        "Standard AI models (Claude 3.5 Haiku)",
+        "Community support",
+        "Public project sharing"
+      ]
+    },
+    {
+      "id": "pro",
+      "name": "Curate Pro",
+      "price": "$20",
+      "interval": "month",
+      "features": [
+        "Unlimited active projects",
+        "Advanced AI models (Claude 3.5 Sonnet, GPT-4o)",
+        "Custom domains for exports",
+        "Private projects",
+        "Priority support via email",
+        "GitHub integration"
+      ]
+    }
+  ]
+}

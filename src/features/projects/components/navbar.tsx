@@ -29,12 +29,7 @@ import { Doc, Id } from "../../../../convex/_generated/dataModel";
 import { useProject, useRenameProject } from "../hooks/use-projects";
 
 type WorkspaceStatusVariant =
-  | "loading"
-  | "busy"
-  | "error"
-  | "warning"
-  | "imported"
-  | "ready";
+  "loading" | "busy" | "error" | "warning" | "imported" | "ready";
 
 type WorkspaceStatus = {
   label: string;

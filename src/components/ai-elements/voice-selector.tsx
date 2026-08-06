@@ -185,12 +185,7 @@ export const VoiceSelectorSeparator = (props: VoiceSelectorSeparatorProps) => (
 
 export type VoiceSelectorGenderProps = ComponentProps<"span"> & {
   value?:
-    | "male"
-    | "female"
-    | "transgender"
-    | "androgyne"
-    | "non-binary"
-    | "intersex";
+    "male" | "female" | "transgender" | "androgyne" | "non-binary" | "intersex";
 };
 
 export const VoiceSelectorGender = ({

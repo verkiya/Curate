@@ -5,7 +5,7 @@ import ky from "ky";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { XIcon } from "lucide-react";
-
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -211,19 +211,26 @@ export const NewProjectDialog = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <PromptInputButton
-                tooltip="Clear"
-                aria-label="Clear prompt"
-                variant="secondary"
-                onClick={() => setInput("")}
-                disabled={!input || isSubmitting}
-              >
-                <XIcon className="size-4" />
-              </PromptInputButton>
+              {!isSubmitting ? (
+                <>
+                  <PromptInputButton
+                    tooltip="Clear"
+                    aria-label="Clear prompt"
+                    variant="secondary"
+                    onClick={() => setInput("")}
+                    disabled={!input}
+                  >
+                    <XIcon className="size-4" />
+                  </PromptInputButton>
 
-              <PromptInputSubmit disabled={!input || isSubmitting}>
-                {isSubmitting ? "Creating..." : undefined}
-              </PromptInputSubmit>
+                  <PromptInputSubmit disabled={!input} />
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground pr-2">
+                  <Spinner className="size-4" />
+                  <span className="font-medium">Creating...</span>
+                </div>
+              )}
             </div>
           </PromptInputFooter>
         </PromptInput>
