@@ -81,3 +81,18 @@ export const useRenameProject = () => {
 export const useUpdateProjectSettings = () => {
   return useMutation(api.projects.updateSettings);
 };
+
+export const useRemoveProject = () => {
+  return useMutation(api.projects.remove).withOptimisticUpdate(
+    (localStore, args) => {
+      const existingProjects = localStore.getQuery(api.projects.get);
+      if (existingProjects !== undefined) {
+        localStore.setQuery(
+          api.projects.get,
+          {},
+          existingProjects.filter((project) => project._id !== args.id),
+        );
+      }
+    },
+  );
+};

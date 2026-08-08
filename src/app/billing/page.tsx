@@ -37,20 +37,10 @@ export default async function BillingPage() {
 
       <div className="text-center mb-8 space-y-2 mt-8">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-          {isPro ? (
-            <>
-              Manage your <span className="text-primary">Subscription</span>
-            </>
-          ) : (
-            <>
-              Upgrade to <span className="text-primary">Curate Pro</span>
-            </>
-          )}
+          Manage your <span className="text-primary">Subscription</span>
         </h1>
         <p className="text-base text-muted-foreground max-w-xl mx-auto">
-          {isPro
-            ? "View your current plan features, update your payment details, or switch to a different plan."
-            : "Get unlimited projects, advanced AI models, custom domains, and priority support."}
+          View your current plan features, update your payment details, or switch to a different plan.
         </p>
       </div>
 
@@ -60,13 +50,7 @@ export default async function BillingPage() {
             key={plan.id}
             className="rounded-xl border bg-card/50 p-6 shadow-sm backdrop-blur-sm flex flex-col"
           >
-            <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
-            <div className="mb-4">
-              <span className="text-3xl font-bold">{plan.price}</span>
-              <span className="text-sm text-muted-foreground">
-                /{plan.interval}
-              </span>
-            </div>
+            <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
             <ul className="space-y-2 flex-1">
               {plan.features.map((feature, i) => (
                 <li
