@@ -150,7 +150,7 @@ export const remove = mutation({
       .query("files")
       .withIndex("by_project", (q) => q.eq("projectId", args.id))
       .collect();
-      
+
     for (const file of files) {
       if (file.storageId) {
         await ctx.storage.delete(file.storageId);
@@ -163,7 +163,7 @@ export const remove = mutation({
       .query("messages")
       .withIndex("by_project_status", (q) => q.eq("projectId", args.id))
       .collect();
-      
+
     for (const msg of messages) {
       await ctx.db.delete(msg._id);
     }
@@ -173,7 +173,7 @@ export const remove = mutation({
       .query("conversations")
       .withIndex("by_project", (q) => q.eq("projectId", args.id))
       .collect();
-      
+
     for (const conv of conversations) {
       await ctx.db.delete(conv._id);
     }

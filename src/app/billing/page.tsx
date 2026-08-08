@@ -40,7 +40,8 @@ export default async function BillingPage() {
           Manage your <span className="text-primary">Subscription</span>
         </h1>
         <p className="text-base text-muted-foreground max-w-xl mx-auto">
-          View your current plan features, update your payment details, or switch to a different plan.
+          View your current plan features, update your payment details, or
+          switch to a different plan.
         </p>
       </div>
 

@@ -5,7 +5,12 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaGithub } from "react-icons/fa";
-import { AlertTriangleIcon, CloudCheckIcon, Loader2Icon, Trash2Icon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CloudCheckIcon,
+  Loader2Icon,
+  Trash2Icon,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Poppins } from "next/font/google";
 import { formatDistanceToNow } from "date-fns";
@@ -38,7 +43,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { Doc, Id } from "../../../../convex/_generated/dataModel";
-import { useProject, useRenameProject, useRemoveProject } from "../hooks/use-projects";
+import {
+  useProject,
+  useRenameProject,
+  useRemoveProject,
+} from "../hooks/use-projects";
 
 type WorkspaceStatusVariant =
   "loading" | "busy" | "error" | "warning" | "imported" | "ready";
@@ -226,16 +235,18 @@ export const Navbar = ({ projectId }: { projectId: Id<"projects"> }) => {
 
   const handleRemove = () => {
     setIsRemoving(true);
-    
+
     // Redirect immediately to avoid reactive queries crashing the project page
     router.push("/");
-    
+
     // Fire off the delete async
-    removeProject({ id: projectId }).catch((error) => {
-      console.error("Failed to delete project:", error);
-    }).finally(() => {
-      setIsRemoving(false);
-    });
+    removeProject({ id: projectId })
+      .catch((error) => {
+        console.error("Failed to delete project:", error);
+      })
+      .finally(() => {
+        setIsRemoving(false);
+      });
   };
 
   const workspaceStatus = getWorkspaceStatus(project);
@@ -366,7 +377,9 @@ export const Navbar = ({ projectId }: { projectId: Id<"projects"> }) => {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Project</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this project? This action cannot be undone and all files and conversations will be permanently deleted.
+                Are you sure you want to delete this project? This action cannot
+                be undone and all files and conversations will be permanently
+                deleted.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -376,7 +389,9 @@ export const Navbar = ({ projectId }: { projectId: Id<"projects"> }) => {
                 disabled={isRemoving}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {isRemoving ? <Loader2Icon className="mr-2 size-4 animate-spin" /> : null}
+                {isRemoving ? (
+                  <Loader2Icon className="mr-2 size-4 animate-spin" />
+                ) : null}
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
