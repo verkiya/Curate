@@ -11,12 +11,8 @@ export const getFiles = query({
 
     const project = await ctx.db.get("projects", args.projectId);
 
-    if (!project) {
-      throw new Error("Project not found");
-    }
-
-    if (project.ownerId !== identity.subject) {
-      throw new Error("Unauthorized to access this project");
+    if (!project || project.ownerId !== identity.subject) {
+      return [];
     }
 
     return await ctx.db
@@ -39,8 +35,8 @@ export const getFile = query({
 
     const project = await ctx.db.get("projects", file.projectId);
 
-    if (!project) {
-      throw new Error("Project not found");
+    if (!project || project.ownerId !== identity.subject) {
+      return null;
     }
 
     if (project.ownerId !== identity.subject) {
@@ -72,8 +68,8 @@ export const getFilePath = query({
 
     const project = await ctx.db.get("projects", file.projectId);
 
-    if (!project) {
-      throw new Error("Project not found");
+    if (!project || project.ownerId !== identity.subject) {
+      return null;
     }
 
     if (project.ownerId !== identity.subject) {
@@ -106,12 +102,8 @@ export const getFolderContents = query({
 
     const project = await ctx.db.get("projects", args.projectId);
 
-    if (!project) {
-      throw new Error("Project not found");
-    }
-
-    if (project.ownerId !== identity.subject) {
-      throw new Error("Unauthorized to access this project");
+    if (!project || project.ownerId !== identity.subject) {
+      return [];
     }
 
     const files = await ctx.db
