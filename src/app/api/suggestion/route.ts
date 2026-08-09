@@ -58,7 +58,7 @@ Follow these steps IN ORDER:
 
 3. Only if steps 1 and 2 do not apply:
    Suggest the exact characters that should be typed directly at the cursor position to complete the current thought, using context from full_code.
-   
+
 Return ONLY the exact code that should be inserted at the cursor.
 
 STRICT RULES:

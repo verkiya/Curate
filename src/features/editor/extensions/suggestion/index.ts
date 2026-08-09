@@ -51,7 +51,7 @@ class SuggestionWidget extends WidgetType {
 }
 let debounceTimer: number | null = null;
 let isWaitingForSuggestion = false;
-const DEBOUNCE_DELAY = 500; // Firing the request for autosuggestion
+const DEBOUNCE_DELAY = 200; // Firing the request for autosuggestion
 let currentAbortController: AbortController | null = null;
 
 const generatePayload = (view: EditorView, fileName: string) => {
