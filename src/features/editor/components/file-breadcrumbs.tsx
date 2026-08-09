@@ -22,7 +22,7 @@ export const FileBreadcrumbs = ({
   const { activeTabId } = useEditor(projectId);
   const filePath = useFilePath(activeTabId);
 
-  if (filePath === undefined || !activeTabId) {
+  if (!filePath || !activeTabId) {
     return (
       <div className="border-b border-border/80 bg-background/95 px-4 py-2 backdrop-blur-xl">
         <div className="flex items-center gap-2">
