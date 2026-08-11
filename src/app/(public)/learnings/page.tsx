@@ -493,13 +493,14 @@ const futureImprovements = [
 
 export default function LearningsPage() {
   return (
-    <main className="cursor-logo min-h-screen bg-background pb-28 text-foreground md:pb-32">
+    <main className="relative cursor-logo min-h-screen overflow-hidden bg-background pb-28 text-foreground md:pb-32">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top_left,rgba(5,150,105,0.12),transparent_42%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.12),transparent_38%)]" />
       {/* ── Hero ── */}
       <div className="border-b border-border/60 bg-card/20">
         <div className="mx-auto max-w-5xl px-6 py-14 lg:px-10">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1 text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground shadow-[0_4px_14px_0_rgba(5,150,105,0.1)] backdrop-blur-sm">
             Curate · Engineering Reference
-          </p>
+          </div>
 
           <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
             <div>
