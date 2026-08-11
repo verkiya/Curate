@@ -4,13 +4,30 @@
 </p>
 
 <p align="center">
-  <a href="https://curate-ecru-eight.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶-4f46e5?style=flat-square" alt="Live Demo"></a>
-  <a href="https://curate-ecru-eight.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-📘-059669?style=flat-square" alt="Learnings"></a>
   <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js 16">
   <img src="https://img.shields.io/badge/Convex-Realtime_DB-ee5533?style=flat-square" alt="Convex">
   <img src="https://img.shields.io/badge/Inngest-Durable_Workflows-6366f1?style=flat-square" alt="Inngest">
   <img src="https://img.shields.io/badge/WebContainers-Browser_Runtime-1e293b?style=flat-square" alt="WebContainers">
 </p>
+
+<br />
+
+## 📸 Quick Demo
+
+<div align="center">
+
+
+https://github.com/user-attachments/assets/YOUR-VIDEO-ID-HERE
+
+
+  <br />
+  <p>
+    <a href="https://curate-ecru-eight.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶-4f46e5?style=for-the-badge" alt="Live Demo"></a>
+    <a href="https://curate-ecru-eight.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-📘-059669?style=for-the-badge" alt="Learnings"></a>
+  </p>
+</div>
+
+<br />
 
 ---
 
