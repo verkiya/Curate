@@ -19,10 +19,6 @@
   </p>
 </div>
 
-<br />
-
-## 📸 Quick Demo
-
 <div align="center">
 
 https://github.com/user-attachments/assets/4f2a4c17-830a-4344-aa94-cb1c175ec9ef
