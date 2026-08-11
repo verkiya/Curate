@@ -4,10 +4,10 @@
   <p><strong>An AI-native browser IDE for building software without leaving the web.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js 16">
-    <img src="https://img.shields.io/badge/Convex-Realtime_DB-ee5533?style=flat-square" alt="Convex">
-    <img src="https://img.shields.io/badge/Inngest-Durable_Workflows-6366f1?style=flat-square" alt="Inngest">
-    <img src="https://img.shields.io/badge/WebContainers-Browser_Runtime-1e293b?style=flat-square" alt="WebContainers">
+    <img src="https://img.shields.io/badge/Next.js-16-555555?style=flat-square&logo=next.js&labelColor=black" alt="Next.js 16">
+    <img src="https://img.shields.io/badge/Convex-Realtime_DB-555555?style=flat-square&labelColor=ee5533" alt="Convex">
+    <img src="https://img.shields.io/badge/Inngest-Durable_Workflows-555555?style=flat-square&labelColor=6366f1" alt="Inngest">
+    <img src="https://img.shields.io/badge/WebContainers-Browser_Runtime-555555?style=flat-square&labelColor=1e293b" alt="WebContainers">
   </p>
 </div>
 
@@ -28,6 +28,7 @@ https://github.com/user-attachments/assets/4f2a4c17-830a-4344-aa94-cb1c175ec9ef
   <p>
     <a href="https://idecurate.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶-4f46e5?style=for-the-badge" alt="Live Demo"></a>
     <a href="https://idecurate.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-📘-059669?style=for-the-badge" alt="Learnings"></a>
+    <a href="https://youtu.be/kqRMQaGJtqk"><img src="https://img.shields.io/badge/Watch_Brief_Curate_Demonstration-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Brief Curate Demonstration" /></a>
   </p>
 </div>
 
