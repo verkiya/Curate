@@ -29,9 +29,9 @@ https://github.com/user-attachments/assets/4f2a4c17-830a-4344-aa94-cb1c175ec9ef
 
   <br />
   <p>
-    <a href="https://idecurate.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶-4f46e5?style=for-the-badge" alt="Live Demo"></a>
-    <a href="https://idecurate.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-📘-059669?style=for-the-badge" alt="Learnings"></a>
-    <a href="https://youtu.be/kqRMQaGJtqk"><img src="https://img.shields.io/badge/Watch_Brief_Curate_Demonstration-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Brief Curate Demonstration" /></a>
+    <a href="https://idecurate.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+    <a href="https://idecurate.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-059669?style=for-the-badge&logo=gitbook&logoColor=white" alt="Learnings"></a>
+    <a href="https://youtu.be/kqRMQaGJtqk"><img src="https://img.shields.io/badge/Watch_Demonstration-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Brief Curate Demonstration" /></a>
   </p>
 </div>
 
