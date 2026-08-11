@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Curate-AI_IDE-black?style=for-the-badge" alt="Curate" />
-  <h1>Curate</h1>
+ <h1>Curate</h1>
   <p><strong>An AI-native browser IDE for building software without leaving the web.</strong></p>
 
   <p>
@@ -8,6 +7,15 @@
     <img src="https://img.shields.io/badge/Convex-Realtime_DB-555555?style=flat-square&labelColor=ee5533" alt="Convex">
     <img src="https://img.shields.io/badge/Inngest-Durable_Workflows-555555?style=flat-square&labelColor=6366f1" alt="Inngest">
     <img src="https://img.shields.io/badge/WebContainers-Browser_Runtime-555555?style=flat-square&labelColor=1e293b" alt="WebContainers">
+    <img src="https://img.shields.io/badge/TypeScript-5-555555?style=flat-square&logo=typescript&labelColor=3178C6" alt="TypeScript">
+    <img src="https://img.shields.io/badge/Tailwind_CSS-4-555555?style=flat-square&logo=tailwindcss&labelColor=06B6D4" alt="Tailwind CSS">
+    <img src="https://img.shields.io/badge/Clerk-Authentication-555555?style=flat-square&logo=clerk&labelColor=6C47FF" alt="Clerk">
+    <img src="https://img.shields.io/badge/AI_SDK-OpenAI_%7C_Gemini_%7C_Anthropic-412991?style=flat-square" alt="AI SDK">
+    <img src="https://img.shields.io/badge/Sentry-Error_Tracking-555555?style=flat-square&logo=sentry&labelColor=362D59" alt="Sentry">
+    <img src="https://img.shields.io/badge/Firecrawl-Web_Scraping-555555?style=flat-square&labelColor=FF4F00" alt="Firecrawl">
+    <img src="https://img.shields.io/badge/CodeMirror-Code_Editor-555555?style=flat-square&labelColor=D3362A" alt="CodeMirror">
+    <img src="https://img.shields.io/badge/React_Flow-Node_Graph-555555?style=flat-square&logo=react&labelColor=FF0072" alt="React Flow">
+    <img src="https://img.shields.io/badge/Zustand-State_Management-555555?style=flat-square&labelColor=443E38" alt="Zustand">
   </p>
 </div>
 
