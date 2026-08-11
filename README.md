@@ -13,6 +13,28 @@
   </p>
 </div>
 
+<br />
+
+## 📸 Quick Demo
+
+<div align="center">
+
+
+
+https://github.com/user-attachments/assets/4f2a4c17-830a-4344-aa94-cb1c175ec9ef
+
+
+
+
+  <br />
+  <p>
+    <a href="https://curate-ecru-eight.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶-4f46e5?style=for-the-badge" alt="Live Demo"></a>
+    <a href="https://curate-ecru-eight.vercel.app/learnings"><img src="https://img.shields.io/badge/Engineering_Learnings-📘-059669?style=for-the-badge" alt="Learnings"></a>
+  </p>
+</div>
+
+<br />
+
 ---
 
 ## 📖 Table of Contents
